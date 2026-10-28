@@ -1,0 +1,15 @@
+.agents/.state/
+
+# Generated locally by agents from .agents/
+CLAUDE.md
+GEMINI.md
+.claude/
+.codex/
+.gemini/
+.opencode/
+opencode.json
+.mcp.json
+
+.DS_Store
+.idea/
+.vscode/

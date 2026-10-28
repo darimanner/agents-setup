@@ -1,0 +1,7 @@
+# Events: session-start, before-tool, after-edit, stop.
+# Example:
+#   format-python:
+#     event: after-edit
+#     match: "*.py"
+#     command: uv run ruff format {file}
+hooks: {}
