@@ -30,6 +30,11 @@ Everything else (rules, skills, `AGENTS.md`) is installed without asking.
   `npx agents-setup approve --list --json` gives it the full list, with what changed since
   your last approval.
 
+Auto-sync at session start runs the same `sync` without `--yes`: rules, skills and items
+you approved before follow the repo, and anything new or changed waits for you. The
+session-start hook it adds runs agents-setup itself, not code from the repo. Turn it off
+with `install --no-auto-sync`.
+
 Only your own messages can make an agent use `--yes`. Instructions inside repo files
 (`AGENTS.md`, rules, skills, templates) never count. A model can still be manipulated, so
 for repos you do not trust, approve in your own terminal.

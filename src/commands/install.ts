@@ -19,6 +19,7 @@ export const installOptions = {
   yes: { type: "boolean" },
   "dry-run": { type: "boolean" },
   force: { type: "boolean" },
+  "no-auto-sync": { type: "boolean" },
 } as const;
 
 export interface InstallValues {
@@ -27,6 +28,7 @@ export interface InstallValues {
   yes?: boolean;
   "dry-run"?: boolean;
   force?: boolean;
+  "no-auto-sync"?: boolean;
 }
 
 function splitList(answer: string): string[] {
@@ -68,7 +70,7 @@ export async function installCommand(values: InstallValues, cwd: string, io: Io)
   let failed = false;
 
   for (const agent of agents) {
-    const prepared = prepare(repo, agent as AgentId, scopes);
+    const prepared = prepare(repo, agent as AgentId, scopes, values["no-auto-sync"] !== true);
     let approved = prepared.previous?.approved ?? {};
     const pending = pendingItems(prepared.plan, approved);
     if (pending.length > 0) {

@@ -23,6 +23,7 @@ export function planWith(
   adapter: Adapter,
   files: Record<string, string>,
   root = makeRepo({}),
+  autoSync?: { cli: string },
 ): Plan {
   writeFiles(root, files);
   const all = listRepoFiles(root);
@@ -34,6 +35,7 @@ export function planWith(
     contents,
     approvals: approvalItems(contents, adapter.id),
     scopes: layers,
+    ...(autoSync && { autoSync }),
   });
 }
 

@@ -8,6 +8,8 @@ export interface AdapterContext {
   /** Approval items for this agent, from `approvalItems`. */
   approvals: ApprovalItem[];
   scopes: string[];
+  /** Set unless the user turned auto-sync off: `cli` is the entry script to run `sync` with. */
+  autoSync?: { cli: string };
 }
 
 /** Turns layers into a plan for one agent. Never touches the filesystem except to read. */

@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { AUTOSYNC_ID, autosyncEntry, autosyncFiles } from "../core/autosync.js";
 import { approvalId } from "../core/fingerprint.js";
 import { HOOK_RUNNER, hookEntry, hookRunnerPath } from "../core/hook-runner.js";
 import { layerPrefix, rootPaths } from "../core/load.js";
@@ -174,6 +175,15 @@ function plan(ctx: AdapterContext) {
     }
   }
 
+  if (ctx.autoSync) {
+    operations.push(...autosyncFiles("claude-code", ctx.root, ctx.autoSync.cli), {
+      kind: "merge-json-item",
+      path: SETTINGS,
+      key: ["hooks", "SessionStart"],
+      id: AUTOSYNC_ID,
+      value: autosyncEntry("claude-code", "$CLAUDE_PROJECT_DIR"),
+    });
+  }
   if (ctx.contents.some((c) => c.hooks.length > 0)) {
     operations.push({
       kind: "write",

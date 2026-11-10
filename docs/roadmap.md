@@ -17,19 +17,21 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
   `instructions`, MCP servers and npm plugins.
 - **Codex adapter**: rules as `developer_instructions`, MCP servers, hooks and plugins in
   `.codex/config.toml`; each agent gets its own hook runner.
+- **Auto-sync** for Claude Code and Codex: a session-start hook asks git whether any layer
+  changed, without Node or the network, and runs `sync` only then. `--no-auto-sync` turns
+  it off.
 
 ## v1
 
 1. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
    and plugins exist only there).
-2. **Auto-sync after `git pull`**: a session-start hook with a fast staleness check that
-   needs neither Node nor the network when nothing changed.
-3. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
+2. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
    you, ask before approving, or review the plan for safety first
    (`approve --list --json`).
-4. **Templates**: `init`, `add` and `template create`, plus a default template for new
+3. **Templates**: `init`, `add` and `template create`, plus a default template for new
    projects.
-5. **First npm release**, so `npx agents-setup` works without a clone.
+4. **First npm release**, so `npx agents-setup` works without a clone. Auto-sync then
+   falls back to `npx` when the clone it was installed from is gone.
 
 ## After v1
 

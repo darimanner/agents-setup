@@ -48,6 +48,10 @@ npx agents-setup uninstall         # remove exactly what was written
 
 `--dry-run` shows what would change; `--yes` approves everything in the plan.
 
+Claude Code and Codex sync on their own. A session-start hook asks git whether any
+`AGENTS.md` or `.agents/` file changed, which takes milliseconds and needs neither Node nor
+the network, and runs `sync` only then. Turn it off with `install --no-auto-sync`.
+
 Planned, with your agent, in plain words:
 
 > Set up this project for me. I work on the frontend.

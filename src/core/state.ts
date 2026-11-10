@@ -24,6 +24,8 @@ export interface AgentState {
   merged: Record<string, MergedFile>;
   /** Approval item id -> approved fingerprint. */
   approved: Record<string, string>;
+  /** `false` once the user installed with `--no-auto-sync`; absent means on. */
+  autoSync?: boolean;
 }
 
 export class InvalidStateError extends Error {

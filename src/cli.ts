@@ -21,7 +21,7 @@ One agent-neutral config for every coding agent.
 
 Commands:
   install        Set up an agent from this repo's layers
-                 --agent <id>  --scope <path|all>  --yes  --dry-run  --force
+                 --agent <id>  --scope <path|all>  --yes  --dry-run  --force  --no-auto-sync
   sync           Apply changes from the repo to installed agents
                  --check  --quiet  --yes  --dry-run  --force  --agent <id>
   approve        Approve hooks, MCP servers and plugins waiting for approval

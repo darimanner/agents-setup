@@ -25,6 +25,10 @@ the repo root and shell-quoted.
 Plugins need a `marketplace`. For a marketplace other than `claude-plugins-official`, give
 it a `source`: `owner/repo` for GitHub or a git URL.
 
+Auto-sync is a `SessionStart` hook that runs `.agents/.state/bin/autosync-claude-code.sh`.
+It syncs only when an `AGENTS.md` or `.agents/` file changed; Claude Code may load the
+update in the next session.
+
 ## Limits
 
 - Claude Code reads `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` instead of
