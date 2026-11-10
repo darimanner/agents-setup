@@ -1,8 +1,8 @@
-import type { Io } from "../cli.js";
 import { discoverLayers } from "../core/layers.js";
 import { loadLayers } from "../core/load.js";
 import { findRepoRoot, listRepoFiles } from "../core/repo.js";
 import { validateLayers } from "../core/validate.js";
+import type { Io } from "../io.js";
 import { plural } from "./format.js";
 
 export async function validateCommand(cwd: string, io: Io): Promise<number> {
