@@ -39,7 +39,7 @@ a short block with fixed markers may be added that points to the layer's `.agent
 
 `.agents/rules/<name>.md`, Markdown, one topic per file. Optional frontmatter:
 
-```markdown
+```text
 ---
 description: Testing conventions
 paths: ["src/**/*.test.ts"]
@@ -63,7 +63,7 @@ the layer.
 ```yaml
 servers:
   context7:
-    transport: http            # http | stdio
+    transport: http # http | stdio
     url: https://mcp.context7.com/mcp
     headers: { Authorization: "Bearer ${CONTEXT7_TOKEN}" }
   postgres:
@@ -83,8 +83,8 @@ environment. `validate` rejects values that look like literal credentials.
 ```yaml
 hooks:
   format-python:
-    event: after-edit          # session-start | before-tool | after-edit | stop
-    match: "**/*.py"           # file glob for edit events, tool name for before-tool
+    event: after-edit # session-start | before-tool | after-edit | stop
+    match: "**/*.py" # file glob for edit events, tool name for before-tool
     command: uv run ruff format {file}
 ```
 
@@ -103,7 +103,7 @@ plugins:
     - name: superpowers
       marketplace: claude-plugins-official
   opencode:
-    - name: opencode-wakatime     # npm package
+    - name: opencode-wakatime # npm package
 ```
 
 ## Manifest

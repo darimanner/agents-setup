@@ -66,12 +66,12 @@ Then ask your agent to write the `AGENTS.md` files and fill in the layers.
 
 ## Supported agents
 
-| Agent | Support |
-|---|---|
-| Claude Code | adapter planned for v1 |
-| Codex | adapter planned for v1 |
-| OpenCode | adapter planned for v1 |
-| Hermes Agent | adapter planned for v1 |
+| Agent                        | Support                       |
+| ---------------------------- | ----------------------------- |
+| Claude Code                  | adapter planned for v1        |
+| Codex                        | adapter planned for v1        |
+| OpenCode                     | adapter planned for v1        |
+| Hermes Agent                 | adapter planned for v1        |
 | Antigravity, Kimi and others | later; until then, agent mode |
 
 Gemini CLI is not supported: Google retired it on June 18, 2026 in favor of Antigravity

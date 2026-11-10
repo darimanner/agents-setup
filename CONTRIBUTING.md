@@ -17,13 +17,13 @@ npm test
 
 Scripts:
 
-| Script | What it does |
-|---|---|
-| `npm run build` | compile `src/` to `dist/` |
-| `npm test` | run the Vitest suite |
+| Script              | What it does                |
+| ------------------- | --------------------------- |
+| `npm run build`     | compile `src/` to `dist/`   |
+| `npm test`          | run the Vitest suite        |
 | `npm run typecheck` | type-check without emitting |
-| `npm run lint` | Biome lint and format check |
-| `npm run format` | apply Biome formatting |
+| `npm run lint`      | Biome lint and format check |
+| `npm run format`    | apply Biome formatting      |
 
 Try your build on a real project with `node /path/to/agents-setup/dist/main.js` from that
 project's directory.
