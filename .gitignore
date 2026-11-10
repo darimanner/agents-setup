@@ -1,4 +1,10 @@
 .agents/.state/
+.dev/
+
+node_modules/
+dist/
+coverage/
+*.tgz
 
 # Generated locally by agents from .agents/
 CLAUDE.md
