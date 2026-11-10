@@ -19,8 +19,12 @@ export function makeRepo(files: Record<string, string>): string {
 }
 
 /** Plans `files` (all layers selected) with one adapter; fails on validation errors. */
-export function planWith(adapter: Adapter, files: Record<string, string>): Plan {
-  const root = makeRepo(files);
+export function planWith(
+  adapter: Adapter,
+  files: Record<string, string>,
+  root = makeRepo({}),
+): Plan {
+  writeFiles(root, files);
   const all = listRepoFiles(root);
   const layers = discoverLayers(all);
   const { contents, diagnostics } = loadLayers(root, all, layers);

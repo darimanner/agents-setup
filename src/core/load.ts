@@ -8,10 +8,17 @@ import { parsePlugins } from "./formats/plugins.js";
 import { parseRule } from "./formats/rules.js";
 import { parseSkill } from "./formats/skills.js";
 import { sha256 } from "./stable.js";
-import type { Diagnostic, LayerContent } from "./types.js";
+import type { Diagnostic, LayerContent, Rule } from "./types.js";
 
 export function layerPrefix(layer: string): string {
   return layer === "." ? "" : `${layer}/`;
+}
+
+/** A rule's `paths` relative to the repo root; a nested layer's rule defaults to its folder. */
+export function rootPaths(rule: Rule): string[] | undefined {
+  if (rule.layer === ".") return rule.paths;
+  if (!rule.paths) return [`${rule.layer}/**`];
+  return rule.paths.map((p) => `${rule.layer}/${p.replace(/^\/+/, "")}`);
 }
 
 function loadLayer(

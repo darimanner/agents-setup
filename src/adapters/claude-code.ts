@@ -1,11 +1,11 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { approvalId } from "../core/fingerprint.js";
-import { HOOK_RUNNER, HOOK_RUNNER_PATH, runnerCommand } from "../core/hook-runner.js";
-import { layerPrefix } from "../core/load.js";
+import { HOOK_RUNNER, hookEntry, hookRunnerPath } from "../core/hook-runner.js";
+import { layerPrefix, rootPaths } from "../core/load.js";
 import { type Operation, usedApprovals } from "../core/plan.js";
 import { isLinkedWorktree } from "../core/repo.js";
-import type { Hook, HookEvent, McpServer, PluginRef, Rule } from "../core/types.js";
+import type { HookEvent, McpServer, PluginRef, Rule } from "../core/types.js";
 import type { Adapter, AdapterContext } from "./types.js";
 
 const SETTINGS = ".claude/settings.local.json";
@@ -27,14 +27,8 @@ function rulePath(rule: Rule): string {
 }
 
 /** Claude Code reads `paths` relative to the repo root, so nested layers get their prefix. */
-function rulePaths(rule: Rule): string[] | undefined {
-  if (rule.layer === ".") return rule.paths;
-  if (!rule.paths) return [`${rule.layer}/**`];
-  return rule.paths.map((p) => `${rule.layer}/${p.replace(/^\/+/, "")}`);
-}
-
 function ruleContent(rule: Rule): string {
-  const paths = rulePaths(rule);
+  const paths = rootPaths(rule);
   const frontmatter = paths
     ? `---\npaths:\n${paths.map((p) => `  - ${JSON.stringify(p)}`).join("\n")}\n---\n`
     : "";
@@ -51,25 +45,6 @@ function serverConfig(server: McpServer): Record<string, unknown> {
     command: server.command,
     ...(server.args && { args: server.args }),
     ...(server.env && { env: server.env }),
-  };
-}
-
-function hookEntry(hook: Hook): Record<string, unknown> {
-  const command = runnerCommand("$CLAUDE_PROJECT_DIR", {
-    event: hook.event,
-    layer: hook.layer,
-    ...(hook.match !== undefined && { match: hook.match }),
-    command: hook.command,
-  });
-  const matcher =
-    hook.event === "after-edit"
-      ? EDIT_TOOLS
-      : hook.event === "before-tool"
-        ? hook.match
-        : undefined;
-  return {
-    ...(matcher !== undefined && { matcher }),
-    hooks: [{ type: "command", command, timeout: 60 }],
   };
 }
 
@@ -187,7 +162,7 @@ function plan(ctx: AdapterContext) {
         path: SETTINGS,
         key: ["hooks", EVENTS[hook.event]],
         id: `${hook.layer}:${hook.name}`,
-        value: hookEntry(hook),
+        value: hookEntry("claude-code", "$CLAUDE_PROJECT_DIR", EDIT_TOOLS, hook),
         approval: approvalId("hook", hook.layer, hook.name),
       });
     }
@@ -202,7 +177,7 @@ function plan(ctx: AdapterContext) {
   if (ctx.contents.some((c) => c.hooks.length > 0)) {
     operations.push({
       kind: "write",
-      path: HOOK_RUNNER_PATH,
+      path: hookRunnerPath("claude-code"),
       content: HOOK_RUNNER,
       readonly: true,
     });

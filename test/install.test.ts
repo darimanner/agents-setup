@@ -83,7 +83,7 @@ describe("install", () => {
     const root = makeRepo(REPO);
     const result = await exec(root, ["install"], ["", "frontend", "y"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Agent (claude-code, opencode) [claude-code]");
+    expect(result.stdout).toContain("Agent (claude-code, codex, opencode) [claude-code]");
     expect(result.stdout).toContain("Which parts do you work on? (frontend, all");
     expect(existsSync(join(root, ".claude/rules/agents-setup/frontend__react.md"))).toBe(true);
     expect(existsSync(join(root, ".mcp.json"))).toBe(true);
@@ -115,7 +115,7 @@ describe("install", () => {
       ["install", "--agent", "vim"],
       "Unknown agent: vim. Supported: claude-code",
     ],
-    ["an agent without adapter", ["install", "--agent", "codex"], "codex has no adapter yet"],
+    ["an agent without adapter", ["install", "--agent", "hermes"], "hermes has no adapter yet"],
     ["no agent outside a terminal", ["install"], "Pass --agent <id>. Supported: claude-code"],
     [
       "an unknown scope",
@@ -228,5 +228,26 @@ describe("install for opencode", () => {
 
     expect((await exec(root, ["uninstall", "--agent", "opencode"])).code).toBe(0);
     expect(existsSync(join(root, ".opencode"))).toBe(false);
+  });
+});
+
+describe("install for codex", () => {
+  it("writes the project config, and keeps its runner when another agent leaves", async () => {
+    const root = makeRepo({
+      ...REPO,
+      ".agents/hooks.yaml": "hooks:\n  done:\n    event: stop\n    command: echo done\n",
+    });
+    for (const agent of ["claude-code", "codex"]) {
+      const result = await exec(root, ["install", "--agent", agent, "--yes"]);
+      expect(result.code).toBe(0);
+    }
+    const config = readFileSync(join(root, ".codex/config.toml"), "utf8");
+    expect(config).toContain('developer_instructions = "Project rules');
+    expect(config).toContain('[mcp_servers.docs]\nurl = "https://mcp.context7.com/mcp"');
+    expect(config).toContain("[[hooks.Stop]]");
+
+    expect((await exec(root, ["uninstall", "--agent", "claude-code"])).code).toBe(0);
+    expect(existsSync(join(root, ".agents/.state/bin/hook-codex.mjs"))).toBe(true);
+    expect(existsSync(join(root, ".agents/.state/bin/hook-claude-code.mjs"))).toBe(false);
   });
 });

@@ -4,20 +4,22 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   HOOK_RUNNER,
-  HOOK_RUNNER_PATH,
   type HookSpec,
+  hookRunnerPath,
   runnerCommand,
 } from "../src/core/hook-runner.js";
 import { makeRepo, writeFiles } from "./helpers.js";
 
-function setup(files: Record<string, string> = {}) {
-  const root = makeRepo({ ...files, [HOOK_RUNNER_PATH]: HOOK_RUNNER });
-  chmodSync(join(root, HOOK_RUNNER_PATH), 0o755);
+const RUNNER = hookRunnerPath("claude-code");
+
+function setup(files: Record<string, string> = {}, runner = RUNNER) {
+  const root = makeRepo({ ...files, [runner]: HOOK_RUNNER });
+  chmodSync(join(root, runner), 0o755);
   return root;
 }
 
 function runHook(root: string, spec: HookSpec, stdin: string, cwd = root) {
-  return spawnSync("/bin/sh", ["-c", runnerCommand("$CLAUDE_PROJECT_DIR", spec)], {
+  return spawnSync("/bin/sh", ["-c", runnerCommand("claude-code", "$CLAUDE_PROJECT_DIR", spec)], {
     cwd,
     input: stdin,
     encoding: "utf8",
@@ -99,5 +101,36 @@ describe("hook runner", () => {
     const spec: HookSpec = { event: "session-start", layer: ".", command: "pwd > where.txt" };
     runHook(root, spec, "", join(root, "frontend/web"));
     expect(readFileSync(join(root, "where.txt"), "utf8").trim()).toBe(root);
+  });
+
+  it("reads the files of a Codex patch, relative to the session folder", () => {
+    const root = setup({}, hookRunnerPath("codex"));
+    const spec: HookSpec = {
+      event: "after-edit",
+      layer: "backend",
+      match: "**/*.py",
+      command: "echo {file} >> out.txt",
+    };
+    const patch = [
+      "*** Begin Patch",
+      "*** Update File: app/x.py",
+      "@@",
+      "*** Add File: app/y.py",
+      "*** Add File: notes.md",
+      "*** Update File: ../frontend/z.py",
+      "*** End Patch",
+    ].join("\n");
+    const cwd = join(root, "backend");
+    writeFiles(root, { "backend/.keep": "" });
+    const stdin = JSON.stringify({ cwd, tool_name: "apply_patch", tool_input: { command: patch } });
+    const result = spawnSync("/bin/sh", ["-c", runnerCommand("codex", ".", spec)], {
+      cwd,
+      input: stdin,
+      encoding: "utf8",
+    });
+    expect(result.status).toBe(0);
+    expect(readFileSync(join(root, "out.txt"), "utf8")).toBe(
+      "backend/app/x.py\nbackend/app/y.py\n",
+    );
   });
 });

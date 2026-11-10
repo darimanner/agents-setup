@@ -14,7 +14,7 @@ for native `AGENTS.md` support.
 | rules         | read-only copies in `.claude/rules/agents-setup/`                                | yes, through `paths`; nested layers get their folder prefixed |
 | skills        | links in `<layer>/.claude/skills/<name>`                                         | yes, nested skills load when Claude works in that folder      |
 | MCP servers   | `.mcp.json`, enabled in `.claude/settings.local.json`                            | no, active for the whole project                              |
-| hooks         | `.claude/settings.local.json`, through `.agents/.state/bin/hook.mjs`             | yes, `after-edit` only fires for files in the hook's layer    |
+| hooks         | `.claude/settings.local.json`, through `.agents/.state/bin/hook-claude-code.mjs` | yes, `after-edit` only fires for files in the hook's layer    |
 | plugins       | `enabledPlugins` (and `extraKnownMarketplaces`) in `.claude/settings.local.json` | no                                                            |
 
 Hook events map to `SessionStart`, `PreToolUse` (the hook's `match` is the tool matcher),
