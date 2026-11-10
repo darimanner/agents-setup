@@ -64,6 +64,29 @@ Then ask your agent to write the `AGENTS.md` files and fill in the layers.
 - **Template:** a reusable bundle of layers you can create, share and apply. Details:
   [docs/templates.md](docs/templates.md).
 
+## How it differs
+
+Tools such as [rulesync](https://github.com/dyoshikawa/rulesync) and
+[Ruler](https://github.com/intellectronica/ruler) already generate per-agent files from one
+source. agents-setup makes different choices:
+
+- **Two ways in.** Run the CLI, or ask your agent: it follows the bundled skill, runs the
+  setup for you and asks before approving anything.
+- **Scopes by folder.** Any directory can carry its own layer. You say which part of the
+  repo you work on, and its settings load where the agent supports per-folder loading.
+- **Approval before code runs.** Hook commands, MCP servers and plugins are installed only
+  after you approve them, and a changed one waits for approval again, also after
+  `git pull`.
+- **Your config is never overwritten.** Files agents-setup did not create are left alone,
+  generated files you edited are kept, and shared config files get only the keys and list
+  items agents-setup owns.
+- **Nothing to commit.** Generated files stay out of git through `.git/info/exclude`, so an
+  install changes nothing your teammates see.
+- **Updates and a clean exit.** Installed items follow the repo after `git pull`, and
+  `uninstall` removes exactly what was written.
+- **Templates of your own.** Bundle the tools you use into a template, share it, and apply
+  it to new or existing projects.
+
 ## Supported agents
 
 | Agent                        | Support                       |
@@ -82,9 +105,9 @@ CLI. Per-agent capabilities and limits: [docs/agents/](docs/agents/README.md).
 - In development; not published to npm.
 - Works today, from a clone: `agents-setup status` (layers and installed agents) and
   `agents-setup validate` (checks every layer).
+- The apply engine is in place; the first agent adapter comes next.
 - macOS and Linux. Windows is not supported yet.
-- Roadmap: apply engine, the four v1 adapters, auto-sync after `git pull`, agent mode,
-  templates, first npm release.
+- What comes next: [docs/roadmap.md](docs/roadmap.md).
 
 ## Contributing
 
@@ -92,9 +115,11 @@ Issues and pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.
 
 ## Credits
 
-[rulesync](https://github.com/dyoshikawa/rulesync) and
-[Ruler](https://github.com/intellectronica/ruler) (both MIT) are the main references for
-how each agent stores its config. Code ported from them keeps their license notice.
+**Prior art.** [rulesync](https://github.com/dyoshikawa/rulesync) and
+[Ruler](https://github.com/intellectronica/ruler) solve a similar problem with a different
+approach; facts about where each agent keeps its config are cross-checked against them.
+agents-setup's code is its own. If code is ever ported from either (both MIT), that file
+keeps their license notice.
 
 ## License
 
