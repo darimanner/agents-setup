@@ -85,6 +85,9 @@ export function applyMergedFile(
 ): MergedFile | undefined {
   const stat = lstatOrUndefined(abs);
   let doc: Record<string, unknown> = {};
+  // Keep the user's formatting choices so a merge does not reformat their file.
+  let indent: string | number = 2;
+  let finalNewline = true;
   if (stat) {
     if (!stat.isFile()) {
       ctx.error(`${path}: not a regular file; left untouched`);
@@ -92,7 +95,10 @@ export function applyMergedFile(
     }
     let parsed: unknown;
     try {
-      parsed = JSON.parse(readFileSync(abs, "utf8"));
+      const text = readFileSync(abs, "utf8");
+      parsed = JSON.parse(text);
+      indent = /^([ \t]+)\S/m.exec(text)?.[1] ?? 2;
+      finalNewline = text.endsWith("\n");
     } catch {
       ctx.error(`${path}: invalid JSON; left untouched`);
       return prev;
@@ -259,7 +265,7 @@ export function applyMergedFile(
         ctx.removed(path);
       }
     } else {
-      ctx.write(abs, `${JSON.stringify(doc, null, 2)}\n`);
+      ctx.write(abs, `${JSON.stringify(doc, null, indent)}${finalNewline ? "\n" : ""}`);
       ctx.written(path);
     }
   }

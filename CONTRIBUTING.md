@@ -73,6 +73,22 @@ These protect users' machines and config; pull requests that break them are not 
 
 More detail in [AGENTS.md](AGENTS.md) and [docs/security.md](docs/security.md).
 
+## Architecture
+
+A run flows through `src/core/` in one direction:
+
+1. `repo.ts` lists the repo's files with git; `layers.ts` finds the layers and resolves
+   scopes.
+2. `load.ts` parses each layer with the parsers in `formats/`; `validate.ts` adds checks
+   across layers. Bad input becomes diagnostics, never exceptions.
+3. An adapter turns the loaded layers into a `Plan` (`plan.ts`): operations to write files,
+   create links, or own keys and array items in shared JSON. `fingerprint.ts` lists what
+   needs approval.
+4. `apply.ts` (with `merge-json.ts`) checks every path, applies only approved operations,
+   never touches what it did not create, and returns the new `state.ts` record.
+5. `exclude.ts` hides the generated paths from git; `uninstall.ts` applies an empty plan
+   against the state, which removes exactly what was written.
+
 ## Adding support for an agent
 
 See [docs/contributing/adding-an-agent.md](docs/contributing/adding-an-agent.md).
