@@ -15,21 +15,21 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
   servers, hooks (through a shared runner) and plugins in local settings.
 - **OpenCode adapter**: one overlay file, `.opencode/opencode.jsonc`, with rules as
   `instructions`, MCP servers and npm plugins.
+- **Codex adapter**: rules as `developer_instructions`, MCP servers, hooks and plugins in
+  `.codex/config.toml`; each agent gets its own hook runner.
 
 ## v1
 
-1. **Codex adapter.** Codex reads `.agents/skills` natively; MCP servers, plugins and rules
-   (as `developer_instructions`) in `.codex/config.toml`, hooks in `.codex/hooks.json`.
-2. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
+1. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
    and plugins exist only there).
-3. **Auto-sync after `git pull`**: a session-start hook with a fast staleness check that
+2. **Auto-sync after `git pull`**: a session-start hook with a fast staleness check that
    needs neither Node nor the network when nothing changed.
-4. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
+3. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
    you, ask before approving, or review the plan for safety first
    (`approve --list --json`).
-5. **Templates**: `init`, `add` and `template create`, plus a default template for new
+4. **Templates**: `init`, `add` and `template create`, plus a default template for new
    projects.
-6. **First npm release**, so `npx agents-setup` works without a clone.
+5. **First npm release**, so `npx agents-setup` works without a clone.
 
 ## After v1
 
@@ -49,4 +49,3 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
 
 - Does a Claude Code session started at the repo root load a sub-folder `.mcp.json`? If
   so, MCP servers could be scoped per folder there too.
-- Hooks and plugins for Codex: what exists and where, to be verified with its docs.
