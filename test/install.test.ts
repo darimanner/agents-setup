@@ -209,6 +209,29 @@ describe("uninstall", () => {
   });
 });
 
+describe("auto-sync", () => {
+  const script = ".agents/.state/bin/autosync-claude-code.sh";
+
+  it("is on by default and registered as a session-start hook", async () => {
+    const root = makeRepo(REPO);
+    expect((await exec(root, ["install", "--agent", "claude-code", "--yes"])).code).toBe(0);
+    expect(existsSync(join(root, script))).toBe(true);
+    const sessionStart = json(root, ".claude/settings.local.json").hooks.SessionStart;
+    expect(JSON.stringify(sessionStart)).toContain("autosync-claude-code.sh");
+  });
+
+  it("stays off after --no-auto-sync, also on sync", async () => {
+    const root = makeRepo(REPO);
+    const argv = ["install", "--agent", "claude-code", "--yes", "--no-auto-sync"];
+    expect((await exec(root, argv)).code).toBe(0);
+    writeFiles(root, { ".agents/rules/general.md": "- Be brief.\n" });
+    expect((await exec(root, ["sync"])).code).toBe(0);
+    expect(existsSync(join(root, script))).toBe(false);
+    expect(json(root, ".agents/.state/claude-code.json").autoSync).toBe(false);
+    expect(json(root, ".claude/settings.local.json").hooks).toBeUndefined();
+  });
+});
+
 describe("install for opencode", () => {
   it("writes one overlay config, keeps it out of git and removes it on uninstall", async () => {
     const root = makeRepo({ ...REPO, "opencode.json": '{ "model": "mine" }\n' });

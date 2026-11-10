@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parse as parseToml } from "smol-toml";
+import { AUTOSYNC_ID, autosyncEntry, autosyncFiles } from "../core/autosync.js";
 import { approvalId } from "../core/fingerprint.js";
 import { isRecord } from "../core/formats/common.js";
 import { HOOK_RUNNER, hookEntry, hookRunnerPath } from "../core/hook-runner.js";
@@ -207,6 +208,15 @@ function plan(ctx: AdapterContext) {
     }
   }
 
+  if (ctx.autoSync) {
+    operations.push(...autosyncFiles("codex", ctx.root, ctx.autoSync.cli), {
+      kind: "merge-json-item",
+      path: CONFIG,
+      key: ["hooks", "SessionStart"],
+      id: AUTOSYNC_ID,
+      value: autosyncEntry("codex", "."),
+    });
+  }
   if (hooks > 0) {
     operations.push({
       kind: "write",
@@ -214,6 +224,8 @@ function plan(ctx: AdapterContext) {
       content: HOOK_RUNNER,
       readonly: true,
     });
+  }
+  if (hooks > 0 || ctx.autoSync) {
     warnings.push("Codex runs a new or changed hook only after you review it with /hooks");
     if (isLinkedWorktree(ctx.root)) {
       warnings.push(

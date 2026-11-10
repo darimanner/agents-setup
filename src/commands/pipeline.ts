@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { ADAPTERS } from "../adapters/index.js";
 import type { Adapter } from "../adapters/types.js";
 import { type ApplyReport, applyPlan } from "../core/apply.js";
@@ -71,11 +72,25 @@ export interface Prepared {
   plan: Plan;
   contentHash: string;
   previous: AgentState | undefined;
+  autoSync: boolean;
 }
 
-/** Everything up to the plan: scopes, layers, validation, approvals, adapter. */
-export function prepare(repo: Repo, agent: AgentId, requested: string[]): Prepared {
+/** The entry script, which session-start hooks run to sync. */
+const CLI = fileURLToPath(new URL("../main.js", import.meta.url));
+
+/**
+ * Everything up to the plan: scopes, layers, validation, approvals, adapter. `autoSync`
+ * defaults to what the last install chose.
+ */
+export function prepare(
+  repo: Repo,
+  agent: AgentId,
+  requested: string[],
+  autoSync?: boolean,
+): Prepared {
   const adapter = resolveAdapter(agent);
+  const previous = loadState(repo.root, agent);
+  const syncOn = autoSync ?? previous?.autoSync !== false;
   let scopes: string[];
   try {
     scopes = resolveScopes(repo.layers, requested);
@@ -97,13 +112,15 @@ export function prepare(repo: Repo, agent: AgentId, requested: string[]): Prepar
     contents,
     approvals: approvalItems(contents, agent),
     scopes,
+    ...(syncOn && { autoSync: { cli: CLI } }),
   });
   return {
     repo,
     adapter,
     plan,
     contentHash: contentHash(repo.root, repo.files, scopes),
-    previous: loadState(repo.root, agent),
+    previous,
+    autoSync: syncOn,
   };
 }
 
@@ -128,6 +145,7 @@ export function execute(
     tracked: listTrackedFiles(repo.root),
     contentHash: prepared.contentHash,
   });
+  if (!prepared.autoSync) state.autoSync = false;
   if (!options.dryRun) {
     writeState(repo.root, state);
     updateExclude(repo.root, plan.agent, generatedPaths(state));
