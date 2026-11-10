@@ -1,0 +1,32 @@
+# Install once with `uvx pre-commit install` (or `pipx run pre-commit install`).
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: local
+    hooks:
+      - id: typography
+        name: banned typography
+        entry: node scripts/check-typography.mjs
+        language: system
+        types: [text]
+      - id: biome
+        name: biome check
+        entry: npx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true
+        language: system
+        types_or: [ts, javascript, json, markdown]
+      - id: typecheck
+        name: typecheck
+        entry: npm run -s typecheck
+        language: system
+        types: [ts]
+        pass_filenames: false

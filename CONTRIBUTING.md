@@ -28,6 +28,20 @@ Scripts:
 Try your build on a real project with `node /path/to/agents-setup/dist/main.js` from that
 project's directory.
 
+### Pre-commit hooks
+
+Install them once (needs [uv](https://docs.astral.sh/uv/) or pipx):
+
+```bash
+uvx pre-commit install
+```
+
+On every commit they check YAML and JSON, merge conflict markers, large files and private
+keys, fix trailing whitespace and final newlines, reject banned typography (long dashes,
+curly quotes, the ellipsis character, special spaces), and run Biome and the type check.
+Run them on everything with `uvx pre-commit run --all-files`. CI runs the typography check
+too.
+
 ## Workflow
 
 1. **Open an issue first** for anything bigger than a small fix, using one of the issue
@@ -58,6 +72,22 @@ These protect users' machines and config; pull requests that break them are not 
 - Hook commands, MCP servers and plugin references always go through approval.
 
 More detail in [AGENTS.md](AGENTS.md) and [docs/security.md](docs/security.md).
+
+## Architecture
+
+A run flows through `src/core/` in one direction:
+
+1. `repo.ts` lists the repo's files with git; `layers.ts` finds the layers and resolves
+   scopes.
+2. `load.ts` parses each layer with the parsers in `formats/`; `validate.ts` adds checks
+   across layers. Bad input becomes diagnostics, never exceptions.
+3. An adapter turns the loaded layers into a `Plan` (`plan.ts`): operations to write files,
+   create links, or own keys and array items in shared JSON. `fingerprint.ts` lists what
+   needs approval.
+4. `apply.ts` (with `merge-json.ts`) checks every path, applies only approved operations,
+   never touches what it did not create, and returns the new `state.ts` record.
+5. `exclude.ts` hides the generated paths from git; `uninstall.ts` applies an empty plan
+   against the state, which removes exactly what was written.
 
 ## Adding support for an agent
 
