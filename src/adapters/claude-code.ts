@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { approvalId } from "../core/fingerprint.js";
-import { HOOK_RUNNER, HOOK_RUNNER_PATH, runnerCommand } from "../core/hook-runner.js";
+import { HOOK_RUNNER, hookRunnerPath, runnerCommand } from "../core/hook-runner.js";
 import { layerPrefix } from "../core/load.js";
 import { type Operation, usedApprovals } from "../core/plan.js";
 import { isLinkedWorktree } from "../core/repo.js";
@@ -55,7 +55,7 @@ function serverConfig(server: McpServer): Record<string, unknown> {
 }
 
 function hookEntry(hook: Hook): Record<string, unknown> {
-  const command = runnerCommand("$CLAUDE_PROJECT_DIR", {
+  const command = runnerCommand("claude-code", "$CLAUDE_PROJECT_DIR", {
     event: hook.event,
     layer: hook.layer,
     ...(hook.match !== undefined && { match: hook.match }),
@@ -202,7 +202,7 @@ function plan(ctx: AdapterContext) {
   if (ctx.contents.some((c) => c.hooks.length > 0)) {
     operations.push({
       kind: "write",
-      path: HOOK_RUNNER_PATH,
+      path: hookRunnerPath("claude-code"),
       content: HOOK_RUNNER,
       readonly: true,
     });

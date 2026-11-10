@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { claudeCode } from "../src/adapters/claude-code.js";
-import { HOOK_RUNNER_PATH } from "../src/core/hook-runner.js";
+import { hookRunnerPath } from "../src/core/hook-runner.js";
 import type { Operation } from "../src/core/plan.js";
 import { planWith } from "./helpers.js";
 
@@ -103,12 +103,12 @@ describe("claude code adapter", () => {
     const fmt =
       hooks[0]?.kind === "merge-json-item" ? (hooks[0].value as Record<string, unknown>) : {};
     expect(fmt.matcher).toBe("Write|Edit|MultiEdit");
-    expect(JSON.stringify(fmt.hooks)).toContain(HOOK_RUNNER_PATH);
+    expect(JSON.stringify(fmt.hooks)).toContain(hookRunnerPath("claude-code"));
     expect(JSON.stringify(fmt.hooks)).toContain("ruff format {file}");
     const guard =
       hooks[1]?.kind === "merge-json-item" ? (hooks[1].value as Record<string, unknown>) : {};
     expect(guard.matcher).toBe("Bash");
-    expect(find(operations, HOOK_RUNNER_PATH)).toHaveLength(1);
+    expect(find(operations, hookRunnerPath("claude-code"))).toHaveLength(1);
   });
 
   it("enables plugins and adds marketplaces with a source", () => {
