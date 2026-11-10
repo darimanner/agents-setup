@@ -30,6 +30,8 @@ package.
   the selected scopes is always loaded, frontmatter included.
 - Skills of a nested layer, such as `frontend/.agents/skills`, load only when OpenCode
   starts in `frontend/` or below. The CLI warns about them.
+- No auto-sync yet, since it needs hooks: run `agents-setup sync` after `git pull` when MCP
+  servers or plugins changed. Rules need no sync: OpenCode reads the source files.
 - Hooks are skipped with a warning. OpenCode runs hooks through plugins, and the plugin API
   of OpenCode 1 and 2 differs; support is on the [roadmap](../roadmap.md).
 - If you keep your own untracked `.opencode/opencode.jsonc`, agents-setup adds its keys to

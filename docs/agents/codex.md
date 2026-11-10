@@ -38,6 +38,9 @@ Hook events map to `SessionStart`, `PreToolUse` (the hook's `match` is the tool 
 `PostToolUse` for `apply_patch` (the hook's `match` is a file glob, relative to its layer;
 a patch that touches several files runs the hook once per matching file), and `Stop`.
 
+Auto-sync is a `SessionStart` hook that runs `.agents/.state/bin/autosync-codex.sh`. Like
+every project hook, Codex runs it only after you review it with `/hooks`, once.
+
 Plugins need a `marketplace`. Give it a `source` (`owner/repo` for GitHub or a git URL) to
 have the marketplace added too, or add it yourself with `codex plugin marketplace add`.
 
