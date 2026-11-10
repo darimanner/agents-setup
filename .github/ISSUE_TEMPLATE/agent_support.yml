@@ -1,0 +1,41 @@
+name: Agent support
+description: Ask for an adapter for another coding agent
+labels: [agent-support]
+body:
+  - type: markdown
+    attributes:
+      value: Links to the agent's official docs make an adapter much faster to build. See docs/contributing/adding-an-agent.md.
+  - type: input
+    id: agent
+    attributes:
+      label: Agent name and homepage
+    validations:
+      required: true
+  - type: textarea
+    id: instructions
+    attributes:
+      label: Instructions
+      description: Does it read AGENTS.md? Nested files? Links to the docs.
+    validations:
+      required: true
+  - type: textarea
+    id: rules-skills
+    attributes:
+      label: Rules and skills
+      description: Where they live in a project, and whether they can be limited to a folder
+  - type: textarea
+    id: mcp
+    attributes:
+      label: MCP servers
+      description: Project-level config file and format
+  - type: textarea
+    id: hooks-plugins
+    attributes:
+      label: Hooks and plugins
+      description: Events, config location, how plugins are installed
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to implement this adapter myself
