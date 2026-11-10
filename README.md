@@ -80,8 +80,10 @@ CLI. Per-agent capabilities and limits: [docs/agents/](docs/agents/README.md).
 ## Status
 
 - In development; not published to npm.
+- Works today, from a clone: `agents-setup status` (layers and installed agents) and
+  `agents-setup validate` (checks every layer).
 - macOS and Linux. Windows is not supported yet.
-- Roadmap: core engine, the four v1 adapters, auto-sync after `git pull`, agent mode,
+- Roadmap: apply engine, the four v1 adapters, auto-sync after `git pull`, agent mode,
   templates, first npm release.
 
 ## Contributing

@@ -1,17 +1,29 @@
 # Agents
 
-> The table below is the starting research from November 2026. Each adapter PR verifies
-> its agent against the official docs and adds a page here, `docs/agents/<agent>.md`, with
-> the confirmed locations and limits.
+> The table below is the starting research from November 2026, partly confirmed by live
+> checks with Claude Code 2.1.311. Each adapter PR verifies its agent against the official
+> docs and adds a page here, `docs/agents/<agent>.md`, with the confirmed locations and
+> limits.
 
-|             | Claude Code                                                                                     | Codex                   | OpenCode                       | Hermes Agent                                                             |
-| ----------- | ----------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------ | ------------------------------------------------------------------------ |
-| `AGENTS.md` | reportedly read when there is no `CLAUDE.md`; otherwise a generated `CLAUDE.md` that imports it | native, nested          | native                         | native, nested; a `.hermes.md` would take priority, so none is generated |
-| rules       | `.claude/rules/`, per-folder via `paths`                                                        | to verify               | `opencode.json` `instructions` | to verify                                                                |
-| skills      | `.claude/skills/`, per-folder via `paths`                                                       | reads `.agents/skills/` | to verify                      | global skills folder; project folder to verify                           |
-| MCP servers | `.mcp.json`, whole project                                                                      | `.codex/config.toml`    | `opencode.json` `mcp`          | global `config.yaml` only                                                |
-| hooks       | settings `hooks`                                                                                | to verify               | through an OpenCode plugin     | global `config.yaml` only                                                |
-| plugins     | `enabledPlugins` and marketplaces in settings                                                   | to verify               | `opencode.json` `plugin`       | `hermes plugins`, global                                                 |
+|             | Claude Code                                                                                              | Codex                                       | OpenCode                                       | Hermes Agent                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------- | -------------------------------------------------- |
+| `AGENTS.md` | read while no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists at or above the launch folder | native, nested                              | native                                         | native, nested; a `.hermes.md` would take priority |
+| rules       | copies in `.claude/rules/`, per-folder via `paths`                                                       | no rules folder; `AGENTS.md` points to them | `opencode.json` `instructions` lists the files | no rules folder; `AGENTS.md` points to them        |
+| skills      | links in `.claude/skills/`                                                                               | reads `.agents/skills/`                     | reads `.agents/skills/`                        | reads repo skills after `hermes skills trust`      |
+| MCP servers | `.mcp.json`, enabled in `.claude/settings.local.json`                                                    | `.codex/config.toml`, trusted projects only | `opencode.json` `mcp`                          | global `config.yaml` only                          |
+| hooks       | settings `hooks`                                                                                         | to verify                                   | through an OpenCode plugin                     | global `config.yaml` only                          |
+| plugins     | `enabledPlugins` and marketplaces in settings                                                            | to verify                                   | `opencode.json` `plugin`                       | `hermes plugins`, global                           |
+
+agents-setup never creates `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`,
+`.hermes.md` or `AGENTS.override.md`: each would hide the committed `AGENTS.md`.
+
+## Claude Code notes
+
+- Rules are copied, not linked: Claude Code skips a linked rule whose target lies outside
+  the folder a session starts in, but loads real files in the root `.claude/rules/` from
+  any subfolder.
+- In a linked git worktree, Claude Code reads `.claude/settings.local.json` of the main
+  checkout only, so agents-setup asks before writing there.
 
 ## Hermes Agent and global config
 
