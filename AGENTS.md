@@ -1,49 +1,47 @@
 # AGENTS.md
 
-Agent configuration for this repository lives in `.agents/`. Every agent builds its own native config from it instead of committing a copy. Follow the setup protocol when the user asks you to set up the project, and run the sync check at the start of every session.
+Guidance for coding agents working on agents-setup itself. What the project is and how
+people use it: [README.md](README.md). Extra rules live in [.agents/rules/](.agents/rules/);
+follow them too.
 
-## Setup protocol
+## Commands
 
-1. Identify yourself: which agent you are (Claude Code, Codex, OpenCode, Gemini CLI, Antigravity, Kimi CLI, Hermes or another one).
-2. Resolve the scopes. Read `.agents/manifest.yaml` and use the scopes the user named. If they named none and the manifest defines more than `shared`, ask. `shared` is always included.
-3. Collect the assets the selected scopes list:
-   - rules: `.agents/rules/<name>.md`
-   - skills: `.agents/skills/<name>/`
-   - MCP servers: entries of `.agents/mcp.yaml`
-   - hooks: entries of `.agents/hooks.yaml`
-4. Write them to your native locations:
-   - rules go to your project instructions file or rules directory
-   - skills go to your skills directory; prefer symlinks to `.agents/skills/<name>/` so updates arrive with `git pull`
-   - MCP servers and hooks are translated into your config format
+```bash
+npm ci              # install
+npm run build       # compile src/ to dist/
+npm test            # vitest
+npm run typecheck   # tsc --noEmit
+npm run lint        # biome check
+npm run format      # biome format --write
+```
 
-   Use the locations your own documentation defines. If you are not sure where something belongs, ask the user instead of guessing. If your only instructions file is `AGENTS.md` itself, do not edit it: read the rules of the recorded scopes from `.agents/rules/` at session start instead.
-5. Add every file and directory you generated to `.gitignore`.
-6. Record the sync in `.agents/.state/<agent>.json`:
+Run lint, typecheck, build and test before calling a change done. CI runs the same steps
+on Linux and macOS with Node 22 and 26.
 
-   ```json
-   {
-     "agent": "claude-code",
-     "scopes": ["shared", "backend"],
-     "source": "<output of git rev-parse HEAD:.agents>",
-     "files": ["CLAUDE.md", ".claude/skills/", ".mcp.json"]
-   }
-   ```
+## Layout
 
-7. Tell the user what you generated and how to switch scopes.
+- `src/`: the CLI. `src/main.ts` is the bin entry, `src/cli.ts` dispatches commands.
+- `test/`: Vitest tests, fixtures under `test/fixtures/`.
+- `docs/`: user docs (formats, scopes, templates, security, per-agent notes) and
+  `docs/contributing/`.
+- `.agents/`: this repo's own agent config, in the format agents-setup reads.
 
-## Sync check
+## House rules
 
-At session start, compare `git rev-parse HEAD:.agents` with `source` in your state file. If they differ, or `git status --porcelain .agents` reports local changes, run the setup again with the recorded scopes and delete the generated files the new setup no longer produces.
+- Adapters turn layers into a plan of operations. They never write files themselves; the
+  apply step does, and records what it wrote.
+- Never overwrite or delete config the user wrote. Merge only keys agents-setup owns.
+- Install only into an agent's project or local scope. The one exception is Hermes, whose
+  MCP servers, hooks and plugins are global: only with explicit consent.
+- Hook commands, MCP servers and plugin references are fingerprinted and need approval.
+  Nothing may install them silently, including auto-sync after `git pull`.
+- Verify an agent's paths and formats against its official docs before changing its
+  adapter, and keep `docs/agents/<agent>.md` in step.
 
-## Editing agent config
+## Workflow
 
-- Change rules, skills, MCP servers and hooks in `.agents/` only. Generated files are overwritten by the next sync.
-- One topic per rule file.
-- A skill is a folder with a `SKILL.md` whose frontmatter has `name` and `description`.
-- When you add an asset, list it under every scope that needs it in `manifest.yaml`.
-- Keep this file agent-neutral: no instructions that only one agent understands.
-
-## Conventions
-
-- Everything in the repository is written in English.
-- Commit messages use the imperative mood, with a subject line under 72 characters.
+- Small foundation changes went straight to `main`. Everything else is one PR per change,
+  with tests and docs, merged after CI is green.
+- Use the issue and PR templates in `.github/`.
+- Commit subjects use the imperative mood and stay under 72 characters.
+- Everything is written in American English.

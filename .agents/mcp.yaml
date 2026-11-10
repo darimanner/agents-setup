@@ -1,5 +1,4 @@
 servers:
   context7:
-    description: Up-to-date library documentation
     transport: http
     url: https://mcp.context7.com/mcp
