@@ -33,5 +33,5 @@ it writes them there marked with the project name, and removes them on `uninstal
 
 ## Agents without an adapter
 
-Antigravity, Kimi and others are planned after v1. Until then, ask the agent to set up the
+Antigravity CLI, Kimi and others are planned after v1. Until then, ask the agent to set up the
 project: it follows the `agents-setup` skill and maps the layers by hand where it can.

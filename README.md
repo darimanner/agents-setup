@@ -99,16 +99,14 @@ source. agents-setup makes different choices:
 
 ## Supported agents
 
-| Agent                        | Support                                 |
-| ---------------------------- | --------------------------------------- |
-| Claude Code                  | [supported](docs/agents/claude-code.md) |
-| Codex                        | adapter planned for v1                  |
-| OpenCode                     | adapter planned for v1                  |
-| Hermes Agent                 | adapter planned for v1                  |
-| Antigravity, Kimi and others | later; until then, agent mode           |
-
-Gemini CLI is not supported: Google retired it on June 18, 2026 in favor of Antigravity
-CLI. Per-agent capabilities and limits: [docs/agents/](docs/agents/README.md).
+| Agent           | Support                                 |
+| --------------- | --------------------------------------- |
+| Claude Code     | [supported](docs/agents/claude-code.md) |
+| Codex           | adapter planned for v1                  |
+| OpenCode        | adapter planned for v1                  |
+| Hermes Agent    | adapter planned for v1                  |
+| Antigravity CLI | planned                                 |
+| Kimi and others | later; until then, agent mode           |
 
 ## Status
 
