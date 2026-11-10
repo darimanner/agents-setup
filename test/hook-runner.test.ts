@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -132,5 +133,36 @@ describe("hook runner", () => {
     expect(readFileSync(join(root, "out.txt"), "utf8")).toBe(
       "backend/app/x.py\nbackend/app/y.py\n",
     );
+  });
+
+  /** Runs the runner directly, the way a Hermes hook command does. */
+  const runDirect = (root: string, spec: HookSpec, stdin: object) =>
+    spawnSync("node", [join(root, hookRunnerPath("hermes")), JSON.stringify(spec)], {
+      cwd: tmpdir(),
+      input: JSON.stringify(stdin),
+      encoding: "utf8",
+    });
+
+  it("does nothing for a session in another folder", () => {
+    const root = setup({}, hookRunnerPath("hermes"));
+    const spec: HookSpec = { event: "session-start", layer: ".", command: "touch ran" };
+    expect(runDirect(root, spec, { cwd: tmpdir() }).status).toBe(0);
+    expect(existsSync(join(root, "ran"))).toBe(false);
+    runDirect(root, spec, { cwd: join(root) });
+    expect(existsSync(join(root, "ran"))).toBe(true);
+  });
+
+  it("reads Hermes edit tools: a path or a patch", () => {
+    const root = setup({ "a.md": "", "b.md": "" }, hookRunnerPath("hermes"));
+    const spec: HookSpec = {
+      event: "after-edit",
+      layer: ".",
+      match: "*.md",
+      command: "echo {file} >> out.txt",
+    };
+    runDirect(root, spec, { cwd: root, tool_name: "write_file", tool_input: { path: "a.md" } });
+    const patch = "*** Begin Patch\n*** Update File: b.md\n*** End Patch";
+    runDirect(root, spec, { cwd: root, tool_name: "patch", tool_input: { mode: "patch", patch } });
+    expect(readFileSync(join(root, "out.txt"), "utf8")).toBe("a.md\nb.md\n");
   });
 });
