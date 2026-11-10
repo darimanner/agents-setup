@@ -30,6 +30,12 @@ export interface ApprovalItem {
   definition: unknown;
 }
 
+/** Items some operation installs; any other would wait for approval forever. */
+export function usedApprovals(approvals: ApprovalItem[], operations: Operation[]): ApprovalItem[] {
+  const used = new Set(operations.map((op) => op.approval));
+  return approvals.filter((a) => used.has(a.id));
+}
+
 export interface Plan {
   agent: AgentId;
   scopes: string[];

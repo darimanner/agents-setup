@@ -1,26 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { claudeCode } from "../src/adapters/claude-code.js";
-import { approvalItems } from "../src/core/fingerprint.js";
 import { HOOK_RUNNER_PATH } from "../src/core/hook-runner.js";
-import { discoverLayers } from "../src/core/layers.js";
-import { loadLayers } from "../src/core/load.js";
 import type { Operation } from "../src/core/plan.js";
-import { listRepoFiles } from "../src/core/repo.js";
-import { makeRepo } from "./helpers.js";
+import { planWith } from "./helpers.js";
 
-function planFor(files: Record<string, string>) {
-  const root = makeRepo(files);
-  const all = listRepoFiles(root);
-  const layers = discoverLayers(all);
-  const { contents, diagnostics } = loadLayers(root, all, layers);
-  expect(diagnostics.filter((d) => d.level === "error")).toEqual([]);
-  return claudeCode.plan({
-    root,
-    contents,
-    approvals: approvalItems(contents, "claude-code"),
-    scopes: layers,
-  });
-}
+const planFor = (files: Record<string, string>) => planWith(claudeCode, files);
 
 const find = (ops: Operation[], path: string) => ops.filter((op) => op.path === path);
 const SKILL = (name: string) => `---\nname: ${name}\ndescription: x\n---\n`;
@@ -96,8 +80,12 @@ describe("claude code adapter", () => {
 
   it("plans an identical server from two layers once", () => {
     const server = "servers:\n  docs: { transport: http, url: https://x.dev/mcp }\n";
-    const { operations } = planFor({ ".agents/mcp.yaml": server, "a/.agents/mcp.yaml": server });
+    const { operations, approvals } = planFor({
+      ".agents/mcp.yaml": server,
+      "a/.agents/mcp.yaml": server,
+    });
     expect(find(operations, ".mcp.json")).toHaveLength(1);
+    expect(approvals.map((a) => a.id)).toEqual(["mcp:.:docs"]);
   });
 
   it("maps hook events and installs the runner", () => {
