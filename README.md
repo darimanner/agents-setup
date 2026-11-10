@@ -4,8 +4,8 @@ One agent-neutral config for every coding agent. Share rules, skills, MCP server
 and plugins with your team through one folder in the repo, scoped to the parts of the
 codebase they belong to.
 
-> **Status:** in development. The CLI is not published to npm yet, and the commands below
-> describe the planned behavior. See [Status](#status).
+> **Status:** in development and not published to npm yet. Claude Code works today from a
+> clone; the other agents, agent mode and templates are planned. See [Status](#status).
 
 ## Why
 
@@ -27,24 +27,34 @@ each developer's machine. The generated files are never committed.
 4. After `git pull`, changed items are synced again. New commands, MCP servers and plugins
    wait for the user's approval first.
 
-## Quick start (planned)
+## Quick start
 
-With the CLI:
+With the CLI (from a clone until the first npm release: `node /path/to/agents-setup/dist/main.js`):
 
 ```bash
 npx agents-setup install --agent claude-code --scope frontend
 ```
 
-Run it without flags to choose interactively.
+Run it without flags to choose interactively. Then, as the repo changes:
 
-With your agent, in plain words:
+```bash
+npx agents-setup sync              # apply what changed after git pull
+npx agents-setup sync --check      # exit 1 if out of date or waiting for approval
+npx agents-setup approve --list    # what waits for approval, and why
+npx agents-setup approve           # approve it in your terminal
+npx agents-setup uninstall         # remove exactly what was written
+```
+
+`--dry-run` shows what would change; `--yes` approves everything in the plan.
+
+Planned, with your agent, in plain words:
 
 > Set up this project for me. I work on the frontend.
 
 The agent runs the CLI for you and asks you to confirm anything that would run code on your
 machine. You can also ask it to check that everything is safe to install first.
 
-Starting a new project:
+Planned, starting a new project:
 
 ```bash
 npx agents-setup init --template gh:you/your-template
@@ -89,13 +99,13 @@ source. agents-setup makes different choices:
 
 ## Supported agents
 
-| Agent                        | Support                       |
-| ---------------------------- | ----------------------------- |
-| Claude Code                  | adapter planned for v1        |
-| Codex                        | adapter planned for v1        |
-| OpenCode                     | adapter planned for v1        |
-| Hermes Agent                 | adapter planned for v1        |
-| Antigravity, Kimi and others | later; until then, agent mode |
+| Agent                        | Support                                 |
+| ---------------------------- | --------------------------------------- |
+| Claude Code                  | [supported](docs/agents/claude-code.md) |
+| Codex                        | adapter planned for v1                  |
+| OpenCode                     | adapter planned for v1                  |
+| Hermes Agent                 | adapter planned for v1                  |
+| Antigravity, Kimi and others | later; until then, agent mode           |
 
 Gemini CLI is not supported: Google retired it on June 18, 2026 in favor of Antigravity
 CLI. Per-agent capabilities and limits: [docs/agents/](docs/agents/README.md).
@@ -103,9 +113,8 @@ CLI. Per-agent capabilities and limits: [docs/agents/](docs/agents/README.md).
 ## Status
 
 - In development; not published to npm.
-- Works today, from a clone: `agents-setup status` (layers and installed agents) and
-  `agents-setup validate` (checks every layer).
-- The apply engine is in place; the first agent adapter comes next.
+- Works today, from a clone: `install`, `sync`, `approve`, `uninstall`, `status` and
+  `validate`, for Claude Code.
 - macOS and Linux. Windows is not supported yet.
 - What comes next: [docs/roadmap.md](docs/roadmap.md).
 
