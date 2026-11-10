@@ -28,6 +28,20 @@ Scripts:
 Try your build on a real project with `node /path/to/agents-setup/dist/main.js` from that
 project's directory.
 
+### Pre-commit hooks
+
+Install them once (needs [uv](https://docs.astral.sh/uv/) or pipx):
+
+```bash
+uvx pre-commit install
+```
+
+On every commit they check YAML and JSON, merge conflict markers, large files and private
+keys, fix trailing whitespace and final newlines, reject banned typography (long dashes,
+curly quotes, the ellipsis character, special spaces), and run Biome and the type check.
+Run them on everything with `uvx pre-commit run --all-files`. CI runs the typography check
+too.
+
 ## Workflow
 
 1. **Open an issue first** for anything bigger than a small fix, using one of the issue
