@@ -27,6 +27,39 @@ export interface Rule {
   body: string;
 }
 
+export interface McpServer {
+  layer: string;
+  name: string;
+  transport: "http" | "stdio";
+  url?: string;
+  headers?: Record<string, string>;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+}
+
+export const HOOK_EVENTS = ["session-start", "before-tool", "after-edit", "stop"] as const;
+
+export type HookEvent = (typeof HOOK_EVENTS)[number];
+
+export interface Hook {
+  layer: string;
+  name: string;
+  event: HookEvent;
+  match?: string;
+  command: string;
+}
+
+export interface PluginRef {
+  layer: string;
+  /** Agent id; may be one agents-setup has no adapter for yet. */
+  agent: string;
+  name: string;
+  marketplace?: string;
+  source?: string;
+  version?: string;
+}
+
 export interface Skill {
   layer: string;
   name: string;
