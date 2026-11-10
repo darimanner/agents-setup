@@ -60,6 +60,7 @@ describe("install", () => {
       encoding: "utf8",
     });
     expect(status).not.toContain(".claude");
+    expect(status).not.toContain(".agents/.state");
   });
 
   it("applies everything with --yes and the chosen scope", async () => {

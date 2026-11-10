@@ -53,7 +53,7 @@ describe("updateExclude", () => {
     updateExclude(root, "claude-code", [".mcp.json"]);
     updateExclude(root, "claude-code", [".mcp.json", ".claude/skills/review"]);
     expect(readFileSync(file, "utf8")).toBe(
-      "# mine\n*.log\n# >>> agents-setup claude-code\n/.mcp.json\n/.claude/skills/review\n# <<< agents-setup claude-code\n",
+      "# mine\n*.log\n# >>> agents-setup claude-code\n/.agents/.state/\n/.mcp.json\n/.claude/skills/review\n# <<< agents-setup claude-code\n",
     );
   });
 
@@ -65,7 +65,7 @@ describe("updateExclude", () => {
     updateExclude(root, "opencode", ["opencode.json"]);
     updateExclude(root, "claude-code", []);
     expect(readFileSync(file, "utf8")).toBe(
-      "# >>> agents-setup opencode\n/opencode.json\n# <<< agents-setup opencode\n",
+      "# >>> agents-setup opencode\n/.agents/.state/\n/opencode.json\n# <<< agents-setup opencode\n",
     );
   });
 

@@ -41,7 +41,9 @@ export function updateExclude(root: string, agent: AgentId, paths: string[]): vo
 
   if (paths.length > 0) {
     if (next !== "" && !next.endsWith("\n")) next += "\n";
-    next += `${[start, ...paths.map(pattern), end].join("\n")}\n`;
+    // The state folder too: a project may not have added it to its .gitignore.
+    const patterns = ["/.agents/.state/", ...paths.map(pattern)];
+    next += `${[start, ...patterns, end].join("\n")}\n`;
   }
   if (next === text) return;
   mkdirSync(dirname(file), { recursive: true });
