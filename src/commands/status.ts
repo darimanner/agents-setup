@@ -1,11 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Io } from "../cli.js";
 import { contentHash } from "../core/hash.js";
 import { discoverLayers } from "../core/layers.js";
 import { layerPrefix, loadLayers } from "../core/load.js";
 import { findRepoRoot, listRepoFiles } from "../core/repo.js";
 import { AGENT_IDS, type AgentId, type LayerContent } from "../core/types.js";
+import type { Io } from "../io.js";
 import { plural } from "./format.js";
 
 /** Raw state JSON; the typed state belongs to the apply engine. */

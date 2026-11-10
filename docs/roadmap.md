@@ -10,26 +10,25 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
 - **Apply engine**: plans, per-agent state, path safety, ownership (never overwrite what
   agents-setup did not create), owned keys and array items in shared JSON, approvals by
   fingerprint, `.git/info/exclude`, exact uninstall.
+- **Claude Code adapter** with the `install`, `sync`, `approve` and `uninstall` commands
+  and `--dry-run`: rules copied with per-folder `paths`, skills linked per folder, MCP
+  servers, hooks (through a shared runner) and plugins in local settings.
 
 ## v1
 
-1. **Claude Code adapter** with the `install`, `sync`, `uninstall` and `approve` commands
-   and `--dry-run`. Rules copied into `.claude/rules/agents-setup/` with per-folder
-   `paths`, skills linked, MCP servers in `.mcp.json` enabled in local settings, hooks and
-   plugins in local settings.
-2. **Codex and OpenCode adapters.** Both read `.agents/skills` natively; MCP servers in
+1. **Codex and OpenCode adapters.** Both read `.agents/skills` natively; MCP servers in
    `.codex/config.toml` and `opencode.json`; rules through `opencode.json` `instructions`
    for OpenCode and a short pointer block in `AGENTS.md` for Codex.
-3. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
+2. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
    and plugins exist only there).
-4. **Auto-sync after `git pull`**: a session-start hook with a fast staleness check that
+3. **Auto-sync after `git pull`**: a session-start hook with a fast staleness check that
    needs neither Node nor the network when nothing changed.
-5. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
+4. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
    you, ask before approving, or review the plan for safety first
    (`approve --list --json`).
-6. **Templates**: `init`, `add` and `template create`, plus a default template for new
+5. **Templates**: `init`, `add` and `template create`, plus a default template for new
    projects.
-7. **First npm release**, so `npx agents-setup` works without a clone.
+6. **First npm release**, so `npx agents-setup` works without a clone.
 
 ## After v1
 
