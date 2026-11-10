@@ -230,3 +230,31 @@ describe("merge-json array items", () => {
     expect(report.errors[0]).toContain("enabledMcpjsonServers");
   });
 });
+
+describe("merged TOML files", () => {
+  const CONFIG = ".codex/config.toml";
+  const docs = key(CONFIG, ["mcp_servers", "docs"], { url: "https://x.dev/mcp" });
+  const hook = item(CONFIG, ["hooks", "Stop"], "a", { hooks: [{ type: "command", command: "x" }] });
+
+  it("creates, updates and removes a file it owns", () => {
+    const root = makeRepo({});
+    const first = applyPlan(root, plan([docs, hook]), undefined, options());
+    expect(raw(root, CONFIG)).toBe(
+      '[mcp_servers.docs]\nurl = "https://x.dev/mcp"\n\n[[hooks.Stop]]\n[[hooks.Stop.hooks]]\ntype = "command"\ncommand = "x"\n',
+    );
+    const changed = key(CONFIG, ["mcp_servers", "docs"], { url: "https://y.dev/mcp" });
+    const second = applyPlan(root, plan([changed]), first.state, options());
+    expect(raw(root, CONFIG)).toBe('[mcp_servers.docs]\nurl = "https://y.dev/mcp"\n');
+    applyPlan(root, plan([]), second.state, options());
+    expect(existsSync(join(root, CONFIG))).toBe(false);
+  });
+
+  it("leaves a TOML file it did not create untouched", () => {
+    const mine = '# my settings\nmodel = "x"\n';
+    const root = makeRepo({ [CONFIG]: mine });
+    const { state, report } = applyPlan(root, plan([docs]), undefined, options());
+    expect(raw(root, CONFIG)).toBe(mine);
+    expect(state.merged[CONFIG]).toBeUndefined();
+    expect(report.skipped[0]?.reason).toContain("only edits TOML files it created");
+  });
+});

@@ -1,4 +1,5 @@
 import { lstatSync, readFileSync, type Stats } from "node:fs";
+import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import { isRecord } from "./formats/common.js";
 import type { Operation } from "./plan.js";
 import { sha256, stableStringify } from "./stable.js";
@@ -72,7 +73,7 @@ function lstatOrUndefined(abs: string): Stats | undefined {
 }
 
 /**
- * Applies one JSON file's owned keys and array items. `approved` are applied, `pending` keep
+ * Applies one JSON or TOML file's owned keys and array items. `approved` are applied, `pending` keep
  * whatever an earlier approval installed. Returns the new ownership record, if any is left.
  */
 export function applyMergedFile(
@@ -84,6 +85,7 @@ export function applyMergedFile(
   ctx: MergeContext,
 ): MergedFile | undefined {
   const stat = lstatOrUndefined(abs);
+  const toml = path.endsWith(".toml");
   let doc: Record<string, unknown> = {};
   // Keep the user's formatting choices so a merge does not reformat their file.
   let indent: string | number = 2;
@@ -93,14 +95,19 @@ export function applyMergedFile(
       ctx.error(`${path}: not a regular file; left untouched`);
       return prev;
     }
+    // Rewriting TOML drops comments and layout, so only files agents-setup created are edited.
+    if (toml && !prev?.created) {
+      ctx.skip(path, `${NOT_OURS}; agents-setup only edits TOML files it created`);
+      return prev;
+    }
     let parsed: unknown;
     try {
       const text = readFileSync(abs, "utf8");
-      parsed = JSON.parse(text);
+      parsed = toml ? parseToml(text) : JSON.parse(text);
       indent = /^([ \t]+)\S/m.exec(text)?.[1] ?? 2;
       finalNewline = text.endsWith("\n");
     } catch {
-      ctx.error(`${path}: invalid JSON; left untouched`);
+      ctx.error(`${path}: invalid ${toml ? "TOML" : "JSON"}; left untouched`);
       return prev;
     }
     if (!isRecord(parsed)) {
@@ -265,7 +272,8 @@ export function applyMergedFile(
         ctx.removed(path);
       }
     } else {
-      ctx.write(abs, `${JSON.stringify(doc, null, indent)}${finalNewline ? "\n" : ""}`);
+      const text = toml ? stringifyToml(doc).trimEnd() : JSON.stringify(doc, null, indent);
+      ctx.write(abs, `${text}${finalNewline ? "\n" : ""}`);
       ctx.written(path);
     }
   }
