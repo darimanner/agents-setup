@@ -10,6 +10,8 @@ export interface AdapterContext {
   scopes: string[];
   /** Set unless the user turned auto-sync off: `cli` is the entry script to run `sync` with. */
   autoSync?: { cli: string };
+  /** The user agreed to entries in the agent's global config for this project (Hermes). */
+  allowGlobal?: boolean;
 }
 
 /** Turns layers into a plan for one agent. Never touches the filesystem except to read. */
@@ -17,4 +19,6 @@ export interface Adapter {
   id: AgentId;
   name: string;
   plan(ctx: AdapterContext): Plan;
+  /** Absolute files outside the repo this adapter may merge into; nothing else is allowed. */
+  externalFiles?(): string[];
 }

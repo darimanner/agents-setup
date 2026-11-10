@@ -1,7 +1,16 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { run } from "../src/cli.js";
 import type { Io } from "../src/io.js";
 import { makeRepo, writeFiles } from "./helpers.js";
@@ -83,7 +92,7 @@ describe("install", () => {
     const root = makeRepo(REPO);
     const result = await exec(root, ["install"], ["", "frontend", "y"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Agent (claude-code, codex, opencode) [claude-code]");
+    expect(result.stdout).toContain("Agent (claude-code, codex, opencode, hermes) [claude-code]");
     expect(result.stdout).toContain("Which parts do you work on? (frontend, all");
     expect(existsSync(join(root, ".claude/rules/agents-setup/frontend__react.md"))).toBe(true);
     expect(existsSync(join(root, ".mcp.json"))).toBe(true);
@@ -115,7 +124,6 @@ describe("install", () => {
       ["install", "--agent", "vim"],
       "Unknown agent: vim. Supported: claude-code",
     ],
-    ["an agent without adapter", ["install", "--agent", "hermes"], "hermes has no adapter yet"],
     ["no agent outside a terminal", ["install"], "Pass --agent <id>. Supported: claude-code"],
     [
       "an unknown scope",
@@ -251,6 +259,48 @@ describe("install for opencode", () => {
 
     expect((await exec(root, ["uninstall", "--agent", "opencode"])).code).toBe(0);
     expect(existsSync(join(root, ".opencode"))).toBe(false);
+  });
+});
+
+describe("install for hermes", () => {
+  const MINE = "# mine\nmodel: hermes-4\n";
+  const REPO_GLOBAL = {
+    ...REPO,
+    ".agents/hooks.yaml": "hooks:\n  done:\n    event: stop\n    command: echo done\n",
+  };
+
+  function hermesHome() {
+    const home = realpathSync(mkdtempSync(join(tmpdir(), "agents-setup-hermes-")));
+    writeFileSync(join(home, "config.yaml"), MINE);
+    vi.stubEnv("HERMES_HOME", home);
+    return join(home, "config.yaml");
+  }
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("asks before writing to the global config, and uninstall restores it", async () => {
+    const config = hermesHome();
+    const root = makeRepo(REPO_GLOBAL);
+    const install = await exec(root, ["install", "--agent", "hermes"], ["", "y", "y"]);
+    expect(install.code).toBe(0);
+    expect(install.stdout).toContain("exist only in its global config");
+    expect(install.stdout).toContain("Write them there for this project? [y/N]");
+    const text = readFileSync(config, "utf8");
+    expect(text).toContain("# mine\nmodel: hermes-4\n");
+    expect(text).toContain(`# managed by agents-setup for ${root}`);
+    expect(text).toContain("on_session_end:");
+    expect(json(root, ".agents/.state/hermes.json").allowGlobal).toBe(true);
+
+    expect((await exec(root, ["uninstall", "--agent", "hermes"])).code).toBe(0);
+    expect(readFileSync(config, "utf8")).toBe(MINE);
+  });
+
+  it("writes nothing global without consent", async () => {
+    const config = hermesHome();
+    const root = makeRepo(REPO_GLOBAL);
+    const result = await exec(root, ["install", "--agent", "hermes", "--yes"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("install with --allow-global");
+    expect(readFileSync(config, "utf8")).toBe(MINE);
   });
 });
 

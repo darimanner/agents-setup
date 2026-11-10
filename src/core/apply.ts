@@ -28,6 +28,8 @@ export interface ApplyOptions {
   tracked: Set<string>;
   /** Content hash of the selected layers, recorded for staleness checks. */
   contentHash: string;
+  /** Absolute files outside the repo the adapter may merge into (Hermes' global config). */
+  external?: string[];
 }
 
 export interface ApplyReport {
@@ -65,8 +67,12 @@ function lstatOrUndefined(abs: string): Stats | undefined {
   }
 }
 
-/** Lexical checks plus the real location of the nearest existing ancestor. */
-function checkPath(root: string, path: string): string {
+/**
+ * Lexical checks plus the real location of the nearest existing ancestor. An absolute path is
+ * allowed only when it is one of the adapter's `external` files.
+ */
+function checkPath(root: string, path: string, external: string[]): string {
+  if (isAbsolute(path) && external.includes(path)) return path;
   if (isAbsolute(path) || path.split("/").includes("..")) {
     throw new UnsafePathError(path, "paths must be relative and stay inside the repo");
   }
@@ -82,8 +88,8 @@ function checkPath(root: string, path: string): string {
   return abs;
 }
 
-function checkOperation(root: string, op: Operation): string {
-  const abs = checkPath(root, op.path);
+function checkOperation(root: string, op: Operation, external: string[]): string {
+  const abs = checkPath(root, op.path, op.kind.startsWith("merge-json") ? external : []);
   if (SHADOWING.has(posix.basename(op.path))) {
     throw new UnsafePathError(op.path, "it would hide the committed AGENTS.md");
   }
@@ -110,6 +116,13 @@ class Writer {
     mkdirSync(dirname(abs), { recursive: true });
     rmSync(abs, { force: true });
     writeFileSync(abs, content, readonly ? { mode: 0o444 } : {});
+  }
+
+  /** Rewrites a shared config file in place, following a link and keeping its mode. */
+  update(abs: string, content: string): void {
+    if (this.dryRun) return;
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, content);
   }
 
   link(abs: string, target: string): void {
@@ -143,7 +156,8 @@ export function applyPlan(
   previous: AgentState | undefined,
   options: ApplyOptions,
 ): { state: AgentState; report: ApplyReport } {
-  const absPaths = plan.operations.map((op) => checkOperation(root, op));
+  const external = options.external ?? [];
+  const absPaths = plan.operations.map((op) => checkOperation(root, op, external));
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const writer = new Writer(root, options.dryRun, join(root, ".agents", ".state", "backup", stamp));
@@ -265,9 +279,9 @@ export function applyPlan(
   }
 
   // State comes from disk; a tampered or committed state file must not reach outside the repo.
-  const safe = (path: string): string | undefined => {
+  const safe = (path: string, allowed: string[] = []): string | undefined => {
     try {
-      return checkPath(root, path);
+      return checkPath(root, path, allowed);
     } catch (error) {
       report.errors.push(`State lists an unsafe path, ignored: ${(error as Error).message}`);
       return undefined;
@@ -276,17 +290,18 @@ export function applyPlan(
 
   const mergeContext: MergeContext = {
     force: options.force,
-    write: (abs, content) => writer.write(abs, content, false),
+    write: (abs, content) => writer.update(abs, content),
     remove: (abs) => writer.remove(abs),
     backup: (path, abs) => writer.backup(path, abs),
     skip,
     error: (message) => report.errors.push(message),
     written: (path) => report.written.push(path),
     removed: (path) => report.removed.push(path),
+    marker: `managed by agents-setup for ${root}`,
   };
   for (const path of Object.keys(previous?.merged ?? {})) {
     if (merges.has(path) || options.tracked.has(path)) continue;
-    const abs = safe(path);
+    const abs = safe(path, external);
     if (abs) mergeGroup(path, abs);
   }
   for (const [path, group] of merges) {

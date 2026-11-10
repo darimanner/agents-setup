@@ -73,24 +73,29 @@ export interface Prepared {
   contentHash: string;
   previous: AgentState | undefined;
   autoSync: boolean;
+  allowGlobal: boolean;
 }
 
 /** The entry script, which session-start hooks run to sync. */
 const CLI = fileURLToPath(new URL("../main.js", import.meta.url));
 
-/**
- * Everything up to the plan: scopes, layers, validation, approvals, adapter. `autoSync`
- * defaults to what the last install chose.
- */
+/** What the user chose on install; each defaults to the choice recorded last time. */
+export interface Choices {
+  autoSync?: boolean;
+  allowGlobal?: boolean;
+}
+
+/** Everything up to the plan: scopes, layers, validation, approvals, adapter. */
 export function prepare(
   repo: Repo,
   agent: AgentId,
   requested: string[],
-  autoSync?: boolean,
+  choices: Choices = {},
 ): Prepared {
   const adapter = resolveAdapter(agent);
   const previous = loadState(repo.root, agent);
-  const syncOn = autoSync ?? previous?.autoSync !== false;
+  const syncOn = choices.autoSync ?? previous?.autoSync !== false;
+  const allowGlobal = choices.allowGlobal ?? previous?.allowGlobal === true;
   let scopes: string[];
   try {
     scopes = resolveScopes(repo.layers, requested);
@@ -113,6 +118,7 @@ export function prepare(
     approvals: approvalItems(contents, agent),
     scopes,
     ...(syncOn && { autoSync: { cli: CLI } }),
+    ...(allowGlobal && { allowGlobal }),
   });
   return {
     repo,
@@ -121,6 +127,7 @@ export function prepare(
     contentHash: contentHash(repo.root, repo.files, scopes),
     previous,
     autoSync: syncOn,
+    allowGlobal,
   };
 }
 
@@ -144,7 +151,9 @@ export function execute(
     ...options,
     tracked: listTrackedFiles(repo.root),
     contentHash: prepared.contentHash,
+    external: prepared.adapter.externalFiles?.() ?? [],
   });
+  if (prepared.allowGlobal) state.allowGlobal = true;
   if (!prepared.autoSync) state.autoSync = false;
   if (!options.dryRun) {
     writeState(repo.root, state);

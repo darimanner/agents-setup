@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import type { AgentState } from "./state.js";
 import type { AgentId } from "./types.js";
 
@@ -13,10 +13,10 @@ export function excludePath(root: string): string {
   return resolve(root, rel);
 }
 
-/** Every path agents-setup created and git should not see. */
+/** Every path agents-setup created and git should not see; files outside the repo are not. */
 export function generatedPaths(state: AgentState): string[] {
   const merged = Object.entries(state.merged)
-    .filter(([, record]) => record.created)
+    .filter(([path, record]) => record.created && !isAbsolute(path))
     .map(([path]) => path);
   return [...Object.keys(state.files), ...Object.keys(state.symlinks), ...merged];
 }

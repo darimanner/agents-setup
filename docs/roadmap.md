@@ -20,23 +20,24 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
 - **Auto-sync** for Claude Code and Codex: a session-start hook asks git whether any layer
   changed, without Node or the network, and runs `sync` only then. `--no-auto-sync` turns
   it off.
+- **Hermes Agent adapter**: MCP servers and hooks in its global config, only with consent,
+  edited in place so the rest of the file stays byte for byte.
 
 ## v1
 
-1. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
-   and plugins exist only there).
-2. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
+1. **Agent mode**: the `agents-setup` skill and protocol, so an agent can run the setup for
    you, ask before approving, or review the plan for safety first
    (`approve --list --json`).
-3. **Templates**: `init`, `add` and `template create`, plus a default template for new
+2. **Templates**: `init`, `add` and `template create`, plus a default template for new
    projects.
-4. **First npm release**, so `npx agents-setup` works without a clone. Auto-sync then
+3. **First npm release**, so `npx agents-setup` works without a clone. Auto-sync then
    falls back to `npx` when the clone it was installed from is gone.
 
 ## After v1
 
 - Adapters for Antigravity (IDE and CLI), Kimi, Cursor and GitHub Copilot. Until then,
   these agents can use agent mode.
+- Auto-sync for Hermes Agent and OpenCode.
 - Hooks for OpenCode, through a generated plugin (its plugin API differs between OpenCode
   1 and 2).
 - A neutral `permissions` asset, for example denying agents read access to `.env` files.
