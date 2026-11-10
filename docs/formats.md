@@ -49,12 +49,19 @@ paths: ["src/**/*.test.ts"]
 ```
 
 `paths` are globs relative to the layer directory and narrow where the rule applies inside
-the layer.
+the layer. Rules must sit directly in `rules/`; files in subfolders are skipped with a
+warning.
+
+## Names
+
+Rule file names, skill folders, MCP server names and hook names end up in generated paths,
+so they use letters, digits, `.`, `_` and `-`, and start with a letter or digit.
 
 ## Skills
 
 `.agents/skills/<name>/SKILL.md` in the [Agent Skills](https://agentskills.io) format, with
-`name` and `description` in the frontmatter. Skills are linked or copied as they are.
+`name` and `description` in the frontmatter. The `name` must match the folder name. Skills
+are linked or copied as they are.
 
 ## MCP servers
 
@@ -74,7 +81,15 @@ servers:
 ```
 
 Secrets are only allowed as `${VAR}` references, resolved from each developer's
-environment. `validate` rejects values that look like literal credentials.
+environment. `validate` checks `url`, `headers`, `command`, `args` and `env`:
+
+- a known credential format (`sk-`, `ghp_`, `github_pat_`, `xoxb-`, `AKIA`, `glpat-` and
+  similar) is an error, and the server is not installed;
+- any other long token of letters and digits is a warning, since ids and hashes look the
+  same.
+
+Write a hook command that contains `{file}` or other braces as a block value or in quotes,
+not inside a `{ ... }` flow mapping, where YAML reads the braces as syntax.
 
 ## Hooks
 
