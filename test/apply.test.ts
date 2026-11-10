@@ -285,3 +285,21 @@ describe("applyPlan dry run", () => {
     expect(dry.report.written).toEqual(["a.md"]);
   });
 });
+
+describe("applyPlan with a tampered state", () => {
+  it("ignores state paths outside the repo", () => {
+    const parent = makeRepo({});
+    const root = join(parent, "repo");
+    mkdirSync(root);
+    writeFileSync(join(parent, "victim.md"), "keep me");
+    const first = applyPlan(root, plan([write("a.md", "x")]), undefined, options());
+    const tampered = {
+      ...first.state,
+      files: { "../victim.md": first.state.files["a.md"] ?? { hash: "" } },
+    };
+    writeFileSync(join(parent, "victim.md"), "x");
+    const { report } = applyPlan(root, plan([]), tampered, options());
+    expect(readFileSync(join(parent, "victim.md"), "utf8")).toBe("x");
+    expect(report.errors[0]).toContain("unsafe path");
+  });
+});

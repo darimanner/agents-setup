@@ -8,8 +8,8 @@ export interface MergedFile {
   created: boolean;
   /** `JSON.stringify(key)` -> hash of the value agents-setup wrote. */
   keys: Record<string, string>;
-  /** `JSON.stringify(key)` -> hashes of the array items agents-setup appended. */
-  items: Record<string, string[]>;
+  /** `JSON.stringify(key)` -> item id -> hash of the array item agents-setup owns. */
+  items: Record<string, Record<string, string>>;
 }
 
 export interface AgentState {

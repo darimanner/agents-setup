@@ -14,6 +14,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, posix, resolve, sep } from "node:path";
+import { applyMergedFile, type MergeContext, type MergeOp } from "./merge-json.js";
 import type { ApprovalItem, Operation, Plan } from "./plan.js";
 import { sha256 } from "./stable.js";
 import type { AgentState } from "./state.js";
@@ -65,8 +66,7 @@ function lstatOrUndefined(abs: string): Stats | undefined {
 }
 
 /** Lexical checks plus the real location of the nearest existing ancestor. */
-function checkOperation(root: string, op: Operation): string {
-  const { path } = op;
+function checkPath(root: string, path: string): string {
   if (isAbsolute(path) || path.split("/").includes("..")) {
     throw new UnsafePathError(path, "paths must be relative and stay inside the repo");
   }
@@ -74,16 +74,21 @@ function checkOperation(root: string, op: Operation): string {
   if (!within(root, abs) || abs === root) {
     throw new UnsafePathError(path, "outside the repo");
   }
-  if (SHADOWING.has(posix.basename(path))) {
-    throw new UnsafePathError(path, "it would hide the committed AGENTS.md");
-  }
   let ancestor = dirname(abs);
   while (!existsSync(ancestor)) ancestor = dirname(ancestor);
   if (!within(root, realpathSync(ancestor))) {
     throw new UnsafePathError(path, "a parent folder links outside the repo");
   }
+  return abs;
+}
+
+function checkOperation(root: string, op: Operation): string {
+  const abs = checkPath(root, op.path);
+  if (SHADOWING.has(posix.basename(op.path))) {
+    throw new UnsafePathError(op.path, "it would hide the committed AGENTS.md");
+  }
   if (op.kind === "symlink" && !within(root, resolve(dirname(abs), op.target))) {
-    throw new UnsafePathError(path, `link target ${op.target} is outside the repo`);
+    throw new UnsafePathError(op.path, `link target ${op.target} is outside the repo`);
   }
   return abs;
 }
@@ -171,28 +176,39 @@ export function applyPlan(
     ),
   };
 
+  const merges = new Map<string, { abs: string; approved: MergeOp[]; pending: MergeOp[] }>();
+  const mergeGroup = (path: string, abs: string) => {
+    let group = merges.get(path);
+    if (!group) {
+      group = { abs, approved: [], pending: [] };
+      merges.set(path, group);
+    }
+    return group;
+  };
+
   plan.operations.forEach((op, index) => {
     const abs = absPaths[index] as string;
     const { path } = op;
+    const isMerge = op.kind === "merge-json" || op.kind === "merge-json-item";
+    if (options.tracked.has(path)) {
+      skip(path, "tracked by git");
+      return;
+    }
     if (!isApproved(op)) {
       // Keep what an earlier approval installed until the new version is approved.
+      if (isMerge) {
+        mergeGroup(path, abs).pending.push(op);
+        return;
+      }
       const kept = previous?.files[path];
       if (kept) state.files[path] = kept;
       const keptLink = previous?.symlinks[path];
       if (keptLink !== undefined) state.symlinks[path] = keptLink;
       return;
     }
-    if (options.tracked.has(path)) {
-      skip(path, "tracked by git");
-      return;
-    }
-    if (op.kind === "write") {
-      applyWrite(op, abs);
-    } else if (op.kind === "symlink") {
-      applySymlink(op, abs);
-    } else {
-      throw new Error(`${op.kind} is not supported yet`);
-    }
+    if (op.kind === "write") applyWrite(op, abs);
+    else if (op.kind === "symlink") applySymlink(op, abs);
+    else mergeGroup(path, abs).approved.push(op);
   });
 
   function applyWrite(op: Extract<Operation, { kind: "write" }>, abs: string): void {
@@ -248,10 +264,48 @@ export function applyPlan(
     state.symlinks[path] = target;
   }
 
+  // State comes from disk; a tampered or committed state file must not reach outside the repo.
+  const safe = (path: string): string | undefined => {
+    try {
+      return checkPath(root, path);
+    } catch (error) {
+      report.errors.push(`State lists an unsafe path, ignored: ${(error as Error).message}`);
+      return undefined;
+    }
+  };
+
+  const mergeContext: MergeContext = {
+    force: options.force,
+    write: (abs, content) => writer.write(abs, content, false),
+    remove: (abs) => writer.remove(abs),
+    backup: (path, abs) => writer.backup(path, abs),
+    skip,
+    error: (message) => report.errors.push(message),
+    written: (path) => report.written.push(path),
+    removed: (path) => report.removed.push(path),
+  };
+  for (const path of Object.keys(previous?.merged ?? {})) {
+    if (merges.has(path) || options.tracked.has(path)) continue;
+    const abs = safe(path);
+    if (abs) mergeGroup(path, abs);
+  }
+  for (const [path, group] of merges) {
+    const record = applyMergedFile(
+      path,
+      group.abs,
+      group.approved,
+      group.pending,
+      previous?.merged[path],
+      mergeContext,
+    );
+    if (record) state.merged[path] = record;
+  }
+
   const planned = new Set(plan.operations.map((op) => op.path));
   for (const [path, { hash }] of Object.entries(previous?.files ?? {})) {
     if (planned.has(path)) continue;
-    const abs = resolve(root, path);
+    const abs = safe(path);
+    if (!abs) continue;
     const stat = lstatOrUndefined(abs);
     if (!stat) continue;
     if (stat.isFile() && hashFile(abs) === hash) {
@@ -263,7 +317,8 @@ export function applyPlan(
   }
   for (const [path, target] of Object.entries(previous?.symlinks ?? {})) {
     if (planned.has(path)) continue;
-    const abs = resolve(root, path);
+    const abs = safe(path);
+    if (!abs) continue;
     const stat = lstatOrUndefined(abs);
     if (!stat) continue;
     if (stat.isSymbolicLink() && readlinkSync(abs) === target) {

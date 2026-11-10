@@ -6,8 +6,18 @@ export type Operation =
   | { kind: "symlink"; path: string; target: string; approval?: string }
   /** Sets one owned key of a JSON object file. */
   | { kind: "merge-json"; path: string; key: string[]; value: unknown; approval?: string }
-  /** Appends one owned item to the array at `key`, after the user's items. */
-  | { kind: "merge-json-item"; path: string; key: string[]; value: unknown; approval?: string };
+  /**
+   * Owns one item of the array at `key`: appended after the user's items, replaced in place
+   * when its value changes. `id` is stable across syncs (for example the hook's name).
+   */
+  | {
+      kind: "merge-json-item";
+      path: string;
+      key: string[];
+      id: string;
+      value: unknown;
+      approval?: string;
+    };
 
 export interface ApprovalItem {
   /** `<kind>:<layer>:<name>` */
