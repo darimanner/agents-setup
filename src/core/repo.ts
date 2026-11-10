@@ -20,6 +20,10 @@ export function findRepoRoot(cwd: string): string {
   }
 }
 
+export function listTrackedFiles(root: string): Set<string> {
+  return new Set(git(root, ["ls-files", "--cached", "-z"]).split("\0").filter(Boolean));
+}
+
 /** Tracked files plus untracked ones that are not ignored, repo-relative POSIX paths. */
 export function listRepoFiles(root: string): string[] {
   const out = git(root, ["ls-files", "--cached", "--others", "--exclude-standard", "-z"]);
