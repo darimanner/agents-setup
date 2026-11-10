@@ -65,4 +65,17 @@ export interface Skill {
   name: string;
   dir: string;
   description: string;
+  /** sha256 over the skill folder's files, set by the loader. */
+  digest?: string;
+}
+
+export interface LayerContent {
+  meta: LayerMeta;
+  /** Repo-relative path of the layer's AGENTS.md, when it has one. */
+  agentsMd?: string;
+  rules: Rule[];
+  skills: Skill[];
+  mcp: McpServer[];
+  hooks: Hook[];
+  plugins: PluginRef[];
 }
