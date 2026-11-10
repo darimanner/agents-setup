@@ -20,6 +20,19 @@ export function findRepoRoot(cwd: string): string {
   }
 }
 
+/** True in a checkout made with `git worktree add`, whose git dir differs from the shared one. */
+export function isLinkedWorktree(root: string): boolean {
+  const [gitDir, commonDir] = git(root, [
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-dir",
+    "--git-common-dir",
+  ])
+    .trim()
+    .split("\n");
+  return gitDir !== commonDir;
+}
+
 export function listTrackedFiles(root: string): Set<string> {
   return new Set(git(root, ["ls-files", "--cached", "-z"]).split("\0").filter(Boolean));
 }

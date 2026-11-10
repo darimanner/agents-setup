@@ -2,6 +2,10 @@ import type { ApprovalItem } from "./plan.js";
 import { sha256, stableStringify } from "./stable.js";
 import type { AgentId, LayerContent, McpServer } from "./types.js";
 
+export function approvalId(kind: ApprovalItem["kind"], layer: string, name: string): string {
+  return `${kind}:${layer}:${name}`;
+}
+
 function item(
   kind: ApprovalItem["kind"],
   layer: string,
@@ -9,7 +13,7 @@ function item(
   definition: unknown,
 ): ApprovalItem {
   return {
-    id: `${kind}:${layer}:${name}`,
+    id: approvalId(kind, layer, name),
     kind,
     layer,
     name,
