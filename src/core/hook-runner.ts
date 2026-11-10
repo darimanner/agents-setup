@@ -1,4 +1,4 @@
-import type { AgentId } from "./types.js";
+import type { AgentId, Hook } from "./types.js";
 
 /** One copy per agent, so uninstalling one agent never removes another agent's runner. */
 export const hookRunnerPath = (agent: AgentId) => `.agents/.state/bin/hook-${agent}.mjs`;
@@ -104,4 +104,28 @@ function shellQuote(s: string): string {
  */
 export function runnerCommand(agent: AgentId, projectDir: string, spec: HookSpec): string {
   return `r=$(git -C "${projectDir}" rev-parse --show-toplevel 2>/dev/null) && f="$r/${hookRunnerPath(agent)}" && [ -f "$f" ] && exec node "$f" ${shellQuote(JSON.stringify(spec))}; exit 0`;
+}
+
+/**
+ * One `{matcher, hooks: [command]}` entry, the shape Claude Code and Codex share. `editTools`
+ * matches the agent's file-editing tools; a before-tool hook's `match` is the tool matcher.
+ */
+export function hookEntry(
+  agent: AgentId,
+  projectDir: string,
+  editTools: string,
+  hook: Hook,
+): Record<string, unknown> {
+  const command = runnerCommand(agent, projectDir, {
+    event: hook.event,
+    layer: hook.layer,
+    ...(hook.match !== undefined && { match: hook.match }),
+    command: hook.command,
+  });
+  const matcher =
+    hook.event === "after-edit" ? editTools : hook.event === "before-tool" ? hook.match : undefined;
+  return {
+    ...(matcher !== undefined && { matcher }),
+    hooks: [{ type: "command", command, timeout: 60 }],
+  };
 }
