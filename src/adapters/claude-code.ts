@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { approvalId } from "../core/fingerprint.js";
 import { HOOK_RUNNER, HOOK_RUNNER_PATH, runnerCommand } from "../core/hook-runner.js";
 import { layerPrefix } from "../core/load.js";
-import type { Operation } from "../core/plan.js";
+import { type Operation, usedApprovals } from "../core/plan.js";
 import { isLinkedWorktree } from "../core/repo.js";
 import type { Hook, HookEvent, McpServer, PluginRef, Rule } from "../core/types.js";
 import type { Adapter, AdapterContext } from "./types.js";
@@ -212,7 +212,7 @@ function plan(ctx: AdapterContext) {
     agent: "claude-code" as const,
     scopes: ctx.scopes,
     operations,
-    approvals: ctx.approvals,
+    approvals: usedApprovals(ctx.approvals, operations),
     warnings,
   };
 }

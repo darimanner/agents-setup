@@ -83,7 +83,7 @@ describe("install", () => {
     const root = makeRepo(REPO);
     const result = await exec(root, ["install"], ["", "frontend", "y"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Agent (claude-code)");
+    expect(result.stdout).toContain("Agent (claude-code, opencode) [claude-code]");
     expect(result.stdout).toContain("Which parts do you work on? (frontend, all");
     expect(existsSync(join(root, ".claude/rules/agents-setup/frontend__react.md"))).toBe(true);
     expect(existsSync(join(root, ".mcp.json"))).toBe(true);
@@ -206,5 +206,27 @@ describe("uninstall", () => {
     const result = await exec(root, ["uninstall"]);
     expect(result.code).toBe(0);
     expect(snapshot(root)).toEqual(before.filter((p) => p !== ".agents/.state"));
+  });
+});
+
+describe("install for opencode", () => {
+  it("writes one overlay config, keeps it out of git and removes it on uninstall", async () => {
+    const root = makeRepo({ ...REPO, "opencode.json": '{ "model": "mine" }\n' });
+    execFileSync("git", ["add", "-A"], { cwd: root });
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init"], {
+      cwd: root,
+    });
+    const install = await exec(root, ["install", "--agent", "opencode", "--scope", "all", "--yes"]);
+    expect(install.code).toBe(0);
+    expect(json(root, ".opencode/opencode.jsonc")).toEqual({
+      instructions: [".agents/rules/general.md", "frontend/.agents/rules/react.md"],
+      mcp: { docs: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
+    });
+    expect(readFileSync(join(root, "opencode.json"), "utf8")).toBe('{ "model": "mine" }\n');
+    const status = execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" });
+    expect(status).toBe("");
+
+    expect((await exec(root, ["uninstall", "--agent", "opencode"])).code).toBe(0);
+    expect(existsSync(join(root, ".opencode"))).toBe(false);
   });
 });

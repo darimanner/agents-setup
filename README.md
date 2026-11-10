@@ -4,8 +4,9 @@ One agent-neutral config for every coding agent. Share rules, skills, MCP server
 and plugins with your team through one folder in the repo, scoped to the parts of the
 codebase they belong to.
 
-> **Status:** in development and not published to npm yet. Claude Code works today from a
-> clone; the other agents, agent mode and templates are planned. See [Status](#status).
+> **Status:** in development and not published to npm yet. Claude Code and OpenCode work
+> today from a clone; the other agents, agent mode and templates are planned. See
+> [Status](#status).
 
 ## Why
 
@@ -103,7 +104,7 @@ source. agents-setup makes different choices:
 | --------------- | --------------------------------------- |
 | Claude Code     | [supported](docs/agents/claude-code.md) |
 | Codex           | adapter planned for v1                  |
-| OpenCode        | adapter planned for v1                  |
+| OpenCode        | [supported](docs/agents/opencode.md)    |
 | Hermes Agent    | adapter planned for v1                  |
 | Antigravity CLI | planned                                 |
 | Kimi and others | later; until then, agent mode           |
@@ -112,7 +113,7 @@ source. agents-setup makes different choices:
 
 - In development; not published to npm.
 - Works today, from a clone: `install`, `sync`, `approve`, `uninstall`, `status` and
-  `validate`, for Claude Code.
+  `validate`, for Claude Code and OpenCode.
 - macOS and Linux. Windows is not supported yet.
 - What comes next: [docs/roadmap.md](docs/roadmap.md).
 

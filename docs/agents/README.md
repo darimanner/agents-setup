@@ -5,14 +5,14 @@
 > docs and adds a page here, `docs/agents/<agent>.md`, with the confirmed locations and
 > limits.
 
-|             | Claude Code                                                                                              | Codex                                       | OpenCode                                       | Hermes Agent                                       |
-| ----------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------- | -------------------------------------------------- |
-| `AGENTS.md` | read while no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists at or above the launch folder | native, nested                              | native                                         | native, nested; a `.hermes.md` would take priority |
-| rules       | copies in `.claude/rules/`, per-folder via `paths`                                                       | no rules folder; `AGENTS.md` points to them | `opencode.json` `instructions` lists the files | no rules folder; `AGENTS.md` points to them        |
-| skills      | links in `.claude/skills/`                                                                               | reads `.agents/skills/`                     | reads `.agents/skills/`                        | reads repo skills after `hermes skills trust`      |
-| MCP servers | `.mcp.json`, enabled in `.claude/settings.local.json`                                                    | `.codex/config.toml`, trusted projects only | `opencode.json` `mcp`                          | global `config.yaml` only                          |
-| hooks       | settings `hooks`                                                                                         | to verify                                   | through an OpenCode plugin                     | global `config.yaml` only                          |
-| plugins     | `enabledPlugins` and marketplaces in settings                                                            | to verify                                   | `opencode.json` `plugin`                       | `hermes plugins`, global                           |
+|             | Claude Code                                                                                              | Codex                                       | OpenCode                         | Hermes Agent                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------- | -------------------------------------------------- |
+| `AGENTS.md` | read while no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists at or above the launch folder | native, nested                              | native                           | native, nested; a `.hermes.md` would take priority |
+| rules       | copies in `.claude/rules/`, per-folder via `paths`                                                       | no rules folder; `AGENTS.md` points to them | `instructions` lists the files   | no rules folder; `AGENTS.md` points to them        |
+| skills      | links in `.claude/skills/`                                                                               | reads `.agents/skills/`                     | reads `.agents/skills/`          | reads repo skills after `hermes skills trust`      |
+| MCP servers | `.mcp.json`, enabled in `.claude/settings.local.json`                                                    | `.codex/config.toml`, trusted projects only | `.opencode/opencode.jsonc` `mcp` | global `config.yaml` only                          |
+| hooks       | settings `hooks`                                                                                         | to verify                                   | not yet (through a plugin)       | global `config.yaml` only                          |
+| plugins     | `enabledPlugins` and marketplaces in settings                                                            | to verify                                   | `plugin`, npm packages           | `hermes plugins`, global                           |
 
 agents-setup never creates `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`,
 `.hermes.md` or `AGENTS.override.md`: each would hide the committed `AGENTS.md`.

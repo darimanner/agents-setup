@@ -13,12 +13,13 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
 - **Claude Code adapter** with the `install`, `sync`, `approve` and `uninstall` commands
   and `--dry-run`: rules copied with per-folder `paths`, skills linked per folder, MCP
   servers, hooks (through a shared runner) and plugins in local settings.
+- **OpenCode adapter**: one overlay file, `.opencode/opencode.jsonc`, with rules as
+  `instructions`, MCP servers and npm plugins.
 
 ## v1
 
-1. **Codex and OpenCode adapters.** Both read `.agents/skills` natively; MCP servers in
-   `.codex/config.toml` and `opencode.json`; rules through `opencode.json` `instructions`
-   for OpenCode and a short pointer block in `AGENTS.md` for Codex.
+1. **Codex adapter.** Codex reads `.agents/skills` natively; MCP servers, plugins and rules
+   (as `developer_instructions`) in `.codex/config.toml`, hooks in `.codex/hooks.json`.
 2. **Hermes Agent adapter**, including the opt-in for its global config (MCP servers, hooks
    and plugins exist only there).
 3. **Auto-sync after `git pull`**: a session-start hook with a fast staleness check that
@@ -34,6 +35,8 @@ Ideas and requests are welcome as [issues](https://github.com/darimanner/agents-
 
 - Adapters for Antigravity (IDE and CLI), Kimi, Cursor and GitHub Copilot. Until then,
   these agents can use agent mode.
+- Hooks for OpenCode, through a generated plugin (its plugin API differs between OpenCode
+  1 and 2).
 - A neutral `permissions` asset, for example denying agents read access to `.env` files.
 - Commands and subagents as neutral asset types.
 - `template update`: pull a newer version of an applied template into a project.
