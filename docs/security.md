@@ -46,6 +46,8 @@ for repos you do not trust, approve in your own terminal.
 - It never overwrites a file it did not create. In shared config files it merges only the
   keys it owns and leaves the rest as it was. `uninstall` removes exactly what it wrote.
 - If a target file is tracked by git, it is left alone.
-- Hermes Agent keeps MCP servers, hooks and plugins only in its global config. agents-setup
-  skips them unless you allow global writes for the project, and then marks each entry
-  with the project name so it can remove it later.
+- Hermes Agent keeps MCP servers and hooks only in its global config. agents-setup skips
+  them unless you allow global writes for the project (`--allow-global`, or yes when
+  `install` asks). It then changes only its own entries, marks each with the project path,
+  keeps the rest of the file byte for byte, backs the file up first, and removes the entries
+  on `uninstall`. Approval still applies to each of them.
