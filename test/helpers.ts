@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { expect } from "vitest";
-import type { Adapter } from "../src/adapters/types.js";
+import type { Adapter, AdapterContext } from "../src/adapters/types.js";
 import { approvalItems } from "../src/core/fingerprint.js";
 import { discoverLayers } from "../src/core/layers.js";
 import { loadLayers } from "../src/core/load.js";
@@ -23,7 +23,7 @@ export function planWith(
   adapter: Adapter,
   files: Record<string, string>,
   root = makeRepo({}),
-  autoSync?: { cli: string },
+  extra: Partial<AdapterContext> = {},
 ): Plan {
   writeFiles(root, files);
   const all = listRepoFiles(root);
@@ -35,7 +35,7 @@ export function planWith(
     contents,
     approvals: approvalItems(contents, adapter.id),
     scopes: layers,
-    ...(autoSync && { autoSync }),
+    ...extra,
   });
 }
 

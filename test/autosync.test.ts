@@ -87,7 +87,7 @@ describe("auto-sync in adapters", () => {
     ["claude code", claudeCode, ".claude/settings.local.json"],
     ["codex", codex, ".codex/config.toml"],
   ] as const)("%s registers a session-start hook without approval", (_name, adapter, config) => {
-    const { operations, approvals } = planWith(adapter, LAYERS, makeRepo({}), cli);
+    const { operations, approvals } = planWith(adapter, LAYERS, makeRepo({}), { autoSync: cli });
     const hook = operations.find((op) => op.kind === "merge-json-item" && op.id === AUTOSYNC_ID);
     expect(hook).toMatchObject({ path: config, key: ["hooks", "SessionStart"] });
     expect(hook?.approval).toBeUndefined();

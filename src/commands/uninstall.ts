@@ -1,3 +1,4 @@
+import { ADAPTERS } from "../adapters/index.js";
 import type { Plan } from "../core/plan.js";
 import { uninstall } from "../core/uninstall.js";
 import type { Io } from "../io.js";
@@ -35,7 +36,11 @@ export async function uninstallCommand(
       io.stdout(`${agent} is not installed\n`);
       continue;
     }
-    const report = uninstall(repo.root, state, { force: values.force === true, dryRun });
+    const report = uninstall(repo.root, state, {
+      force: values.force === true,
+      dryRun,
+      external: ADAPTERS[agent]?.externalFiles?.() ?? [],
+    });
     const plan: Plan = { agent, scopes: state.scopes, operations: [], approvals: [], warnings: [] };
     printReport(io, plan, report, { dryRun });
     if (report.errors.length > 0) result = 1;

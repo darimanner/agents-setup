@@ -42,4 +42,6 @@ export interface Plan {
   operations: Operation[];
   approvals: ApprovalItem[];
   warnings: string[];
+  /** Items left out because they only exist in the agent's global config, which needs consent. */
+  globalSkipped?: { file: string; items: string[] };
 }

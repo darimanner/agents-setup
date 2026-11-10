@@ -9,7 +9,7 @@ import { type AgentState, statePath, writeState } from "./state.js";
 export function uninstall(
   root: string,
   state: AgentState,
-  options: { force: boolean; dryRun: boolean },
+  options: { force: boolean; dryRun: boolean; external?: string[] },
 ): ApplyReport {
   const empty = { agent: state.agent, scopes: [], operations: [], approvals: [], warnings: [] };
   const result = applyPlan(root, empty, state, {
@@ -18,6 +18,7 @@ export function uninstall(
     dryRun: options.dryRun,
     tracked: listTrackedFiles(root),
     contentHash: "",
+    ...(options.external && { external: options.external }),
   });
   if (options.dryRun) return result.report;
 

@@ -1,7 +1,17 @@
-import { existsSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { type ApplyOptions, applyPlan } from "../src/core/apply.js";
+import { type ApplyOptions, applyPlan, UnsafePathError } from "../src/core/apply.js";
 import type { ApprovalItem, Operation, Plan } from "../src/core/plan.js";
 import { makeRepo, writeFiles } from "./helpers.js";
 
@@ -256,5 +266,68 @@ describe("merged TOML files", () => {
     expect(raw(root, CONFIG)).toBe(mine);
     expect(state.merged[CONFIG]).toBeUndefined();
     expect(report.skipped[0]?.reason).toContain("only edits TOML files it created");
+  });
+});
+
+describe("a YAML config outside the repo", () => {
+  const MINE = [
+    "# my Hermes settings",
+    "model: hermes-4 # the one I like",
+    "mcp_servers:",
+    "  mine:",
+    "    command: my-mcp",
+    "hooks:",
+    "  pre_tool_call:",
+    "    - command: my-guard",
+    "",
+  ].join("\n");
+
+  function setup() {
+    const root = makeRepo({});
+    const home = realpathSync(mkdtempSync(join(tmpdir(), "agents-setup-hermes-")));
+    const file = join(home, "config.yaml");
+    writeFileSync(file, MINE);
+    const ops = [
+      key(file, ["mcp_servers", "docs"], { url: "https://x.dev/mcp" }),
+      item(file, ["hooks", "pre_tool_call"], "a", { matcher: "terminal", command: "guard" }),
+    ];
+    return { root, home, file, ops };
+  }
+
+  it("merges owned entries, keeping comments and marking them", () => {
+    const { root, file, ops } = setup();
+    applyPlan(root, plan(ops), undefined, options({ external: [file] }));
+    const text = readFileSync(file, "utf8");
+    expect(text).toContain("# my Hermes settings\nmodel: hermes-4 # the one I like\n");
+    expect(text).toContain(
+      `  # managed by agents-setup for ${root}\n  docs:\n    url: https://x.dev/mcp`,
+    );
+    expect(text).toContain(
+      `    - command: my-guard\n    # managed by agents-setup for ${root}\n    - matcher: terminal\n      command: guard\n`,
+    );
+  });
+
+  it("backs it up, and an empty plan restores it exactly", () => {
+    const { root, file, ops } = setup();
+    const { state } = applyPlan(root, plan(ops), undefined, options({ external: [file] }));
+    const backups = readdirSync(join(root, ".agents/.state/backup"), { recursive: true });
+    expect(backups.some((p) => String(p).endsWith("config.yaml"))).toBe(true);
+    applyPlan(root, plan([]), state, options({ external: [file] }));
+    expect(readFileSync(file, "utf8")).toBe(MINE);
+  });
+
+  it("writes through a link instead of replacing it", () => {
+    const { root, home, file, ops } = setup();
+    const link = join(home, "linked.yaml");
+    symlinkSync(file, link);
+    const linked = ops.map((op) => ({ ...op, path: link }));
+    applyPlan(root, plan(linked), undefined, options({ external: [link] }));
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    expect(readFileSync(file, "utf8")).toContain("docs:");
+  });
+
+  it("refuses an absolute path the adapter did not declare", () => {
+    const { root, ops } = setup();
+    expect(() => applyPlan(root, plan(ops), undefined, options())).toThrow(UnsafePathError);
   });
 });
