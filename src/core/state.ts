@@ -26,6 +26,8 @@ export interface AgentState {
   approved: Record<string, string>;
   /** `false` once the user installed with `--no-auto-sync`; absent means on. */
   autoSync?: boolean;
+  /** `true` once the user allowed entries in the agent's global config for this project. */
+  allowGlobal?: boolean;
 }
 
 export class InvalidStateError extends Error {

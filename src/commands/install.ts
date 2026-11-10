@@ -2,6 +2,7 @@ import type { AgentId } from "../core/types.js";
 import type { Io } from "../io.js";
 import {
   approveAll,
+  type Choices,
   CommandError,
   confirm,
   describeItem,
@@ -20,6 +21,7 @@ export const installOptions = {
   "dry-run": { type: "boolean" },
   force: { type: "boolean" },
   "no-auto-sync": { type: "boolean" },
+  "allow-global": { type: "boolean" },
 } as const;
 
 export interface InstallValues {
@@ -29,6 +31,7 @@ export interface InstallValues {
   "dry-run"?: boolean;
   force?: boolean;
   "no-auto-sync"?: boolean;
+  "allow-global"?: boolean;
 }
 
 function splitList(answer: string): string[] {
@@ -70,7 +73,21 @@ export async function installCommand(values: InstallValues, cwd: string, io: Io)
   let failed = false;
 
   for (const agent of agents) {
-    const prepared = prepare(repo, agent as AgentId, scopes, values["no-auto-sync"] !== true);
+    const choices: Choices = {
+      autoSync: values["no-auto-sync"] !== true,
+      ...(values["allow-global"] && { allowGlobal: true }),
+    };
+    let prepared = prepare(repo, agent as AgentId, scopes, choices);
+    const global = prepared.plan.globalSkipped;
+    if (global && io.prompt && !dryRun) {
+      io.stdout(
+        `${agent}: these exist only in its global config, ${global.file}, and apply to every session there:\n`,
+      );
+      for (const item of global.items) io.stdout(`  ${item}\n`);
+      if (await confirm(io, "Write them there for this project?")) {
+        prepared = prepare(repo, agent as AgentId, scopes, { ...choices, allowGlobal: true });
+      }
+    }
     let approved = prepared.previous?.approved ?? {};
     const pending = pendingItems(prepared.plan, approved);
     if (pending.length > 0) {
